@@ -200,13 +200,14 @@ for i in range(15):
 socktimeout = 20
 socket.setdefaulttimeout(socktimeout)
 
-# RAC
+# Added - Bob Cowdery (G3UKB)
+# External interface vars
 extsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 extsock.bind(('127.0.0.1', 10000))
 extsock.settimeout(0.01)
 lastBndCmd=-1
 extAddr = None
-# RAC
+# End - Bob Cowdery (G3UKB)
 
 def pal_gray0():
     g.cmap="gray0"
@@ -984,7 +985,7 @@ def update():
         # Added - Bob Cowdery (G3UKB)
         # This code allows some external control to be exercised over a UDP socklet
         try:
-            data, extAddr = extsock.recvfrom(1024)
+            data, extAddr = extsock.recvfrom(100)
             asciidata = data.decode(encoding='UTF-8')
             # Commands are as follows:
             #   'band:n'    where n is 2 (160m) - 14 (2m)
@@ -1024,6 +1025,7 @@ def update():
         except Exception as e:
             print('Exception processing external command [%s][%s]' % (asciidata, str(e)))
 
+        # Process commands that must be executed while IDLE
         if not receiving and not transmitting:
             # Idle
             if lastBndCmd != -1:
