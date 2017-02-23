@@ -81,5 +81,103 @@ class Automate:
             }
             
         """
+        self.__script = {}
         
+        try:
+            f = open(self.__scriptPath)
+            lines = f.readlines()
+        except Exception as e:
+            print('Error in file access [%s][%s]' % (self.__scriptPath, str(e)))
         
+        try:    
+            # Process file
+            cmd, value = lines[0].split(':')
+            if cmd.lower() == 'run':
+                if value.lower().contains('repeat'):
+                    cmd, value = value.split(' ')
+                    try:
+                        count = int(value)
+                    except Exception as e:
+                        print('Syntax is REPEAT n[nnn..], found %s' % (lines[0]))
+                        return False
+                    self.__script[S_RUN] = [S_REPEAT, count]
+                elif value.lower().contains('loop'):
+                    self.__script[S_RUN] = [S_LOOP, None]
+                elif value.lower().contains('once'):
+                    self.__script[S_RUN] = [S_ONCE, None]
+                else:
+                    print("'RUN' line must contain REPEAT, LOOP or ONCE")
+                    return False
+            else:
+                print("First line in the script file must be 'RUN'")
+                return False
+            
+            cmd, value = lines[1].split(':')
+            if cmd.lower() == 'stop':
+                if value.lower().contains('idle'):
+                    self.__script[S_STOP] = S_IDLE
+                elif value.lower().contains('continue'):
+                    self.__script[S_STOP] = S_CONTINUE
+                else:
+                    print("'STOP' line must contain IDLE or CONTINUE")
+                    return False
+            else:
+                print("Second line in the script file must be 'STOP'")
+                return False
+            
+            # Process command lines
+            self.__script[S_COMMANDS] = []
+            n = -1
+            for line in lines:
+                n += 1
+                if n==0 or n==1: continue
+                self.__script[S_COMMANDS].append([])
+                toks = line.split(',')
+                if len(toks) != 6:
+                    print('Line %d in script file contains %d tokens, expected 6 [%s]' % (n, len(toks, line)))
+                    return False
+                # Line contains [band, tx, antenna, cycles, spot, radio]
+                # Translate the items into an internal representation
+                # Process BAND
+                if toks[C_BAND] in BAND_TO_INTERNAL:
+                    self.__script[S_COMMANDS][n-2].append(BAND_TO_INTERNAL[toks[C_BAND]])
+                else:
+                    print('Invalid band %s at line %d' % (toks[C_BAND], n))
+                    return False
+                # Process TX
+                if toks[C_TX].lower() == 'false': tx = False
+                elif toks[C_TX].lower() == 'true': tx = True
+                else:
+                    print('Invalid TX %s at line %d' % (toks[C_TX], n))
+                    return False
+                self.__script[S_COMMANDS][n-2].append(tx)
+                # Process ANTENNA
+                if toks[C_ANTENNA] in ANTENNA_TO_INTERNAL:
+                    self.__script[S_COMMANDS][n-2].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
+                else:
+                    print('Invalid antenna name %s at line %d' % (toks[C_ANTENNA], n))
+                    return False
+                # Process CYCLES
+                try:
+                    cycles = int(toks[C_CYCLES])
+                    self.__script[S_COMMANDS][n-2].append(cycles)
+                except Exception as e:
+                    print('Invalid cycles number %s at line %d' % (toks[C_CYCLES], n))
+                    return False
+                # Process SPOT
+                if toks[C_SPOT].lower() == 'false': spot = False
+                elif toks[C_SPOT].lower() == 'true': spot = True
+                else:
+                    print('Invalid SPOT %s at line %d' % (toks[C_SPOT], n))
+                    return False
+                self.__script[S_COMMANDS][n-2].append(spot)
+                # Process RADIO
+                if toks[C_RADIO].lower() == 'internal': radio = R_INTERNAL
+                elif toks[C_RADIO].lower() == 'external': radio = R_EXTERNAL
+                else:
+                    print('Invalid RADIO %s at line %d' % (toks[C_RADIO], n))
+                    return False
+                self.__script[S_COMMANDS][n-2].append(radio)
+		except Exception as e:
+			print('Error in file processing [%s][%s]' % (self.__scriptPath, str(e)))
+                

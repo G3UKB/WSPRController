@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# automation.py
+# defs.py
 # 
 # Copyright (C) 2017 by G3UKB Bob Cowdery
 # This program is free software; you can redistribute it and/or modify
@@ -42,8 +42,13 @@ C_BAND = 0
 C_TX = 1
 C_ANTENNA = 2
 C_CYCLES = 3
-C_SPOTspot = 4
+C_SPOT = 4
 C_RADIO = 5
+
+# ===============================================================================
+# Radio definitions
+R_INTERNAL = 'sinternal'
+R_EXTERNAL = 'rexternal'
 
 # ===============================================================================
 # Band definitions
