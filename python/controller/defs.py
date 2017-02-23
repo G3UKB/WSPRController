@@ -71,36 +71,36 @@ B_2     = 'B_2'
 # Value = id to be used internally
 BAND_TO_INTERNAL = {
     '160':  B_160,
-    '80':   B80,
-    '60':   B60,
-    '40':   B40,
-    '30':   B30,
-    '20':   B20,
-    '17':   B17,
-    '15':   B15,
-    '12':   B12,
-    '10':   B6,
-    '6':    B6,
-    '4':    B4,
-    '2':    B2,       
+    '80':   B_80,
+    '60':   B_60,
+    '40':   B_40,
+    '30':   B_30,
+    '20':   B_20,
+    '17':   B_17,
+    '15':   B_15,
+    '12':   B_12,
+    '10':   B_10,
+    '6':    B_6,
+    '4':    B_4,
+    '2':    B_2,       
 }
 
 # Key = entry in internal table
 # Value = id to be used externally (i.e. WSPR)
 BAND_TO_EXTERNAL = {
     B_160:  2,
-    B80:    3,
-    B60:    4,
-    B40:    5,
-    B30:    6,
-    B20:    7,
-    B17:    8,
-    B15:    9,
-    B12:    10,
-    B6:     11,
-    B6:     12,
-    B4:     13,
-    B2:     14,       
+    B_80:    3,
+    B_60:    4,
+    B_40:    5,
+    B_30:    6,
+    B_20:    7,
+    B_17:    8,
+    B_15:    9,
+    B_12:    10,
+    B_10:    11,
+    B_6:     12,
+    B_4:     13,
+    B_2:     14,       
 }
 
 # ===============================================================================
@@ -122,6 +122,10 @@ ANTENNA_TO_INTERNAL = {
 }
 
 # These are the relay switching instructions for the 7100 HF and 7100 VU antenna sockets
+R_ON = 'ron'
+R_OFF = 'roff'
+R_NA = 'rna'
+
 ANTENNA_TO_HF_MATRIX = {
     A_LOOP_160:     {1: R_ON, 2:R_NA, 3: R_OFF, 4: R_NA},
     A_LOOP_80:      {1: R_ON, 2:R_NA, 3: R_OFF, 4: R_NA},

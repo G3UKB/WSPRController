@@ -1,0 +1,6 @@
+RUN:ONCE
+STOP:IDLE
+160,False,80m-10m-EFD,5,False,Internal
+80,False,80m-10m-EFD,5,False,Internal
+40,False,80m-10m-EFD,5,False,Internal
+2,False,80m-10m-EFD,5,False,Internal

@@ -21,6 +21,10 @@
 #     bob@bobcowdery.plus.com
 #
 
+import os, sys, traceback
+
+from defs import *
+
 """
 
 Automate WSPR and auxiliary equipment to control rig and antennas.
@@ -61,7 +65,7 @@ class Automate:
     
     """
         
-    def __init__(self, filePath):
+    def __init__(self, scriptPath):
         
         self.__scriptPath = scriptPath
         
@@ -107,10 +111,10 @@ class Automate:
                     self.__script[S_RUN] = [S_ONCE, None]
                 else:
                     print("'RUN' line must contain REPEAT, LOOP or ONCE")
-                    return False
+                    return False, None
             else:
                 print("First line in the script file must be 'RUN'")
-                return False
+                return False, None
             
             cmd, value = lines[1].split(':')
             if cmd.lower() == 'stop':
@@ -120,10 +124,10 @@ class Automate:
                     self.__script[S_STOP] = S_CONTINUE
                 else:
                     print("'STOP' line must contain IDLE or CONTINUE")
-                    return False
+                    return False, None
             else:
                 print("Second line in the script file must be 'STOP'")
-                return False
+                return False, None
             
             # Process command lines
             self.__script[S_COMMANDS] = []
@@ -135,7 +139,7 @@ class Automate:
                 toks = line.split(',')
                 if len(toks) != 6:
                     print('Line %d in script file contains %d tokens, expected 6 [%s]' % (n, len(toks, line)))
-                    return False
+                    return False, None
                 # Line contains [band, tx, antenna, cycles, spot, radio]
                 # Translate the items into an internal representation
                 # Process BAND
@@ -143,41 +147,62 @@ class Automate:
                     self.__script[S_COMMANDS][n-2].append(BAND_TO_INTERNAL[toks[C_BAND]])
                 else:
                     print('Invalid band %s at line %d' % (toks[C_BAND], n))
-                    return False
+                    return False, None
                 # Process TX
                 if toks[C_TX].lower() == 'false': tx = False
                 elif toks[C_TX].lower() == 'true': tx = True
                 else:
                     print('Invalid TX %s at line %d' % (toks[C_TX], n))
-                    return False
+                    return False, None
                 self.__script[S_COMMANDS][n-2].append(tx)
                 # Process ANTENNA
                 if toks[C_ANTENNA] in ANTENNA_TO_INTERNAL:
                     self.__script[S_COMMANDS][n-2].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
                 else:
                     print('Invalid antenna name %s at line %d' % (toks[C_ANTENNA], n))
-                    return False
+                    return False, None
                 # Process CYCLES
                 try:
                     cycles = int(toks[C_CYCLES])
                     self.__script[S_COMMANDS][n-2].append(cycles)
                 except Exception as e:
                     print('Invalid cycles number %s at line %d' % (toks[C_CYCLES], n))
-                    return False
+                    return False, None
                 # Process SPOT
                 if toks[C_SPOT].lower() == 'false': spot = False
                 elif toks[C_SPOT].lower() == 'true': spot = True
                 else:
                     print('Invalid SPOT %s at line %d' % (toks[C_SPOT], n))
-                    return False
+                    return False, None
                 self.__script[S_COMMANDS][n-2].append(spot)
                 # Process RADIO
                 if toks[C_RADIO].lower() == 'internal': radio = R_INTERNAL
                 elif toks[C_RADIO].lower() == 'external': radio = R_EXTERNAL
                 else:
                     print('Invalid RADIO %s at line %d' % (toks[C_RADIO], n))
-                    return False
+                    return False, None
                 self.__script[S_COMMANDS][n-2].append(radio)
-		except Exception as e:
-			print('Error in file processing [%s][%s]' % (self.__scriptPath, str(e)))
+        except Exception as e:
+            print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
+            return False, None
+        
+        return True, self.__script
                 
+#======================================================================================================================
+# Main code
+def main():
+    
+    try:
+        # The application 
+        app = Automate('..\\scripts\\script-1.txt')
+        # Run application
+        r, struct = app.parseScript()
+        print (struct)
+        sys.exit(0)
+        
+    except Exception as e:
+        print ('Exception','Exception [%s][%s]' % (str(e), traceback.format_exc()))
+ 
+# Entry point       
+if __name__ == '__main__':
+    main()            
