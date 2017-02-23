@@ -21,7 +21,7 @@
 #     bob@bobcowdery.plus.com
 #
 
-import os, sys, traceback
+import os, sys, socket, traceback
 
 from defs import *
 
@@ -69,6 +69,21 @@ class Automate:
         
         self.__scriptPath = scriptPath
         
+        # Create command socket
+        self.__cmdSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+        # Start the event thread
+        self.__evntThread = EventThread(self.__evntCallback)
+        self.__evntThread.start()
+    
+    def terminate(self):
+        """ Terminate and exit """
+        
+        self.__evntThread.terminate()
+        self.__evntThread.join()
+    
+    # =================================================================================
+    # Main processing     
     def parseScript(self):
         
         """
@@ -97,7 +112,7 @@ class Automate:
             # Process file
             cmd, value = lines[0].split(':')
             if cmd.lower() == 'run':
-                if value.lower().contains('repeat'):
+                if 'repeat' in value.lower():
                     cmd, value = value.split(' ')
                     try:
                         count = int(value)
@@ -105,9 +120,9 @@ class Automate:
                         print('Syntax is REPEAT n[nnn..], found %s' % (lines[0]))
                         return False
                     self.__script[S_RUN] = [S_REPEAT, count]
-                elif value.lower().contains('loop'):
+                elif 'loop' in value.lower():
                     self.__script[S_RUN] = [S_LOOP, None]
-                elif value.lower().contains('once'):
+                elif 'once' in value.lower():
                     self.__script[S_RUN] = [S_ONCE, None]
                 else:
                     print("'RUN' line must contain REPEAT, LOOP or ONCE")
@@ -118,9 +133,9 @@ class Automate:
             
             cmd, value = lines[1].split(':')
             if cmd.lower() == 'stop':
-                if value.lower().contains('idle'):
+                if 'idle' in value.lower():
                     self.__script[S_STOP] = S_IDLE
-                elif value.lower().contains('continue'):
+                elif 'continue' in value.lower():
                     self.__script[S_STOP] = S_CONTINUE
                 else:
                     print("'STOP' line must contain IDLE or CONTINUE")
@@ -133,6 +148,7 @@ class Automate:
             self.__script[S_COMMANDS] = []
             n = -1
             for line in lines:
+                line = line.strip('\n\r')
                 n += 1
                 if n==0 or n==1: continue
                 self.__script[S_COMMANDS].append([])
@@ -187,7 +203,61 @@ class Automate:
             return False, None
         
         return True, self.__script
-                
+    
+    def executeScript(self):
+        """ Execute the script """
+        
+        pass
+    
+    # =================================================================================
+    # Callback
+    def __evntCallback(self, evnt):
+        """ Process event from WSPR """
+        
+        pass
+    
+"""
+
+Event thread.
+Receive events from WSPR.
+
+"""
+class EventThrd (threading.Thread):
+    
+    def __init__(self, callback):
+        """
+        Constructor
+        
+        Arguments
+            callback    -- callback here for event notifications
+        """
+
+        super(EventThrd, self).__init__()
+        
+        self.__callback = callback
+        
+        self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.__sock.bind((EVNT_IP, EVNT_PORT))
+        self.__sock.settimeout(3)
+        
+        self.__terminate = False
+    
+    def terminate(self):
+        """ Terminate thread """
+        
+        self.__terminate = True
+        
+    def run(self):
+        # Listen for events
+        while not self.__terminate:
+            try:
+                data, addr = self.__sock.recvfrom(100)
+            except socket.timeout:
+                continue
+            asciidata = data.decode(encoding='UTF-8')
+            self.__callback(asciidata)
+
+       
 #======================================================================================================================
 # Main code
 def main():
@@ -195,12 +265,17 @@ def main():
     try:
         # The application 
         app = Automate('..\\scripts\\script-1.txt')
-        # Run application
+        # Parse the file
         r, struct = app.parseScript()
         print (struct)
+        r = app.executeScript()
+        app.terminate()
         sys.exit(0)
-        
+    except KeyboardInterrupt:
+        app.terminate()
+        sys.exit()    
     except Exception as e:
+        app.terminate()
         print ('Exception','Exception [%s][%s]' % (str(e), traceback.format_exc()))
  
 # Entry point       
