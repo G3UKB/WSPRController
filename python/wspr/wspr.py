@@ -41,6 +41,10 @@
 #  essentially nothing. These changes are also licensed under the
 #  GNU General Public License (GPL).
 #
+# Revision for external control 23/2/17 by G3UKB
+#   Added a UDP interface for control and events for basic automation from
+#   a controlling application. See updates marked G3UKB.
+#
 #------------------------------------------------------------------------------
 from tkinter import *
 from tkinter.filedialog import *
