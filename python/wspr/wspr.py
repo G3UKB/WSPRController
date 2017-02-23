@@ -200,14 +200,27 @@ for i in range(15):
 socktimeout = 20
 socket.setdefaulttimeout(socktimeout)
 
+# ===============================================================================
 # Added - Bob Cowdery (G3UKB)
-# External interface vars
+
+# External interface socket (incoming)
 extsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-extsock.bind(('127.0.0.1', 10000))
+EXT_PORT = 10000
+extsock.bind(('127.0.0.1', EXT_PORT))
 extsock.settimeout(0.01)
-lastBndCmd=-1
-extAddr = None
+# Event socket (outgoing)
+evtsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+EVT_PORT = 10001
+
+lastBndCmd = -1 # Last received band switch command
+extAddr = None  # Address of external caller
+S_IDLE = 0
+S_RX = 1
+S_TX = 2
+lastState = S_IDLE    # Remember last state
+
 # End - Bob Cowdery (G3UKB)
+# ===============================================================================
 
 def pal_gray0():
     g.cmap="gray0"
@@ -979,10 +992,11 @@ def update():
 
     newsecond=0					# =1 if a new second
     if isec != isec0:                           #Do once per second
-# this code block is executed once per second
+    # this code block is executed once per second
 
         # ===============================================================================
         # Added - Bob Cowdery (G3UKB)
+        
         # This code allows some external control to be exercised over a UDP socklet
         try:
             data, extAddr = extsock.recvfrom(100)
@@ -1031,9 +1045,33 @@ def update():
             if lastBndCmd != -1:
                 # Switch band
                 iband.set(lastBndCmd)
-                # Let client kow we have now switched
-                extsock.sendto(str(lastBndCmd).encode('UTF-8'), extAddr)
+                # Let client know we have now switched
+                evtsock.sendto(('band:%d' % lastBndCmd).encode('UTF-8'), (extAddr[0], EVT_PORT))
                 lastBndCmd = -1
+                # Try to adjust the level to around 0dB as different bands will have different noise levels
+                iterations = 5
+                while iterations > 0:
+                    if ndb < LOW_DB or ndb > HIGH_DB:
+                        # Not within a good range
+                        if ndb < 0:
+                            # Increase gain
+                           ndgain.set(ndgain.get() + abs(ndb))
+                        else:
+                            # Decrease gain
+                           ndgain.set(ndgain.get() - ndb)
+                        iterations -= 1
+                    else:
+                        break
+        
+        # Check for events due
+        if receiving: currentState = S_RX
+        elif transmitting: currentState = S_TX
+        else: currentState = S_IDLE        
+        if lastState != currentState:
+            if lastState == S_RX and currentState == S_IDLE:
+                # End of a receive cycle
+                evtsock.sendto('cycle'.encode('UTF-8'), (extAddr[0], EVT_PORT))
+                
         # End - Bob Cowdery (G3UKB)
         # ===============================================================================
         
