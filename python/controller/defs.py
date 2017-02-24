@@ -23,9 +23,14 @@
 
 # ===============================================================================
 # Network
+CMD_IP = '127.0.0.1'
 CMD_PORT = 10000
 EVT_IP = '127.0.0.1'
 EVT_PORT = 10001
+
+# ===============================================================================
+# Timeouts
+BAND_EVNT_TIMEOUT = 5
 
 # ===============================================================================
 # Internal structure for script files
@@ -109,6 +114,11 @@ BAND_TO_EXTERNAL = {
     B_2:     14,       
 }
 
+# Convert the band to a frequency for WSPR operation on that band
+BAND_TO_FREQ = {
+    
+}
+
 # ===============================================================================
 # Antenna definitions
 # Note this depends on what you have available and what switching arrangement you have
@@ -128,19 +138,23 @@ ANTENNA_TO_INTERNAL = {
 }
 
 # These are the relay switching instructions for the 7100 HF and 7100 VU antenna sockets
-R_ON = 'ron'
-R_OFF = 'roff'
-R_NA = 'rna'
+RELAY_ON = 'relayon'
+RELAY_OFF = 'relayoff'
+RELAY_NA = 'rna'
 
 ANTENNA_TO_HF_MATRIX = {
-    A_LOOP_160:     {1: R_ON, 2:R_NA, 3: R_OFF, 4: R_NA},
-    A_LOOP_80:      {1: R_ON, 2:R_NA, 3: R_OFF, 4: R_NA},
-    A_EFD_80_10:    {1: R_OFF, 2:R_NA, 3: R_OFF, 4: R_NA},
-    A_DIPOLE_6_4_2: {1: R_NA, 2:R_ON, 3: R_ON, 4: R_ON},
-    A_VERT_6_4_2:   {1: R_NA, 2:R_OFF, 3: R_ON, 4: R_ON},
+    A_LOOP_160:     {1: RELAY_ON, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
+    A_LOOP_80:      {1: RELAY_ON, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
+    A_EFD_80_10:    {1: RELAY_OFF, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
+    A_DIPOLE_6_4_2: {1: RELAY_NA, 2:RELAY_ON, 3: RELAY_ON, 4: RELAY_ON},
+    A_VERT_6_4_2:   {1: RELAY_NA, 2:RELAY_OFF, 3: RELAY_ON, 4: RELAY_ON},
 }
 
 ANTENNA_TO_VU_MATRIX = {
-    A_DIPOLE_6_4_2: {1: R_NA, 2:R_ON, 3: R_NA, 4: R_OFF},
-    A_VERT_6_4_2:   {1: R_NA, 2:R_OFF, 3: R_NA, 4: R_OFF},
+    A_DIPOLE_6_4_2: {1: RELAY_NA, 2:RELAY_ON, 3: RELAY_NA, 4: RELAY_OFF},
+    A_VERT_6_4_2:   {1: RELAY_NA, 2:RELAY_OFF, 3: RELAY_NA, 4: RELAY_OFF},
 }
+
+# Default parameters
+RELAY_DEFAULT_STATE = {1: RELAY_OFF, 2:RELAY_OFF, 3: RELAY_OFF, 4: RELAY_OFF, 5: RELAY_OFF, 6: RELAY_OFF}
+ARDUINO_ADDR = ('192, 168, 1, 178', 8888)

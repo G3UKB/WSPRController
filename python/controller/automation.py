@@ -22,8 +22,15 @@
 #
 
 import os, sys, socket, traceback
+import threading
 
 from defs import *
+# We need to pull in antennaControl from the AntennaSwitch project
+sys.path.append(os.path.join('..','..','..','..','AntennaSwitch','trunk','python'))
+import antcontrol
+# We need to pull in cat from the LoopControl project
+sys.path.append(os.path.join('..','..','..','..','LoopControl','trunk','python', 'common'))
+import cat
 
 """
 
@@ -75,7 +82,20 @@ class Automate:
         # Start the event thread
         self.__evntThread = EventThread(self.__evntCallback)
         self.__evntThread.start()
+        
+        # Create the event objects
+        self.__bandEvt = threading.Event()
+        self.__cycleEvt = threading.Event()
+        
+        # Instance vars
+        self.__waitingBandNo = None
+        
+        # Create the antenna controller
+        self.__antControl = antcontrol.AntControl(RELAY_DEFAULT_STATE, ARDUINO_ADDR, self.__antControlCallback)
     
+        # Create the CAT controller
+        self.__cat = cat.CAT(variant, settings)
+        
     def terminate(self):
         """ Terminate and exit """
         
@@ -205,16 +225,223 @@ class Automate:
         return True, self.__script
     
     def executeScript(self):
-        """ Execute the script """
+        """ Execute according to the internal structure"""
         
-        pass
+        try:
+            # Get the iteration instruction.
+            if self.__script[S_RUN][0] == S_REPEAT:
+                iterationCount = self.__script[S_RUN][1]
+            elif self.__script[S_RUN][0] == S_LOOP:
+                iterationCount = -1
+            else:
+                iterationCount = 1
+            # Get the termination instruction.    
+            if self.__script[S_STOP] == S_IDLE:
+                idle = True
+            else:
+                idle = False
+                
+            while True:
+                # Do one run through the script
+                # if we hit an error we report on the instruction and the error then skip the line
+                # and attempt to carry on.
+                for instruction in self.__script[S_COMMANDS]:
+                    # Unpack
+                    band, tx, antenna, cycles, spot, radio = instruction                    
+                    # This will only return when the band change completes
+                    if not self.__doBand(band):
+                        continue
+                    if not self.__doTx(tx):
+                        continue
+                    if not self.__doAntenna(antenna, band):
+                        continue
+                    if not self.__doSpot(spot):
+                        continue
+                    if not self.__doRadio(radio):
+                        continue
+                    # This will only return when the cycles are complete
+                    if not self.__doCycles(cycles):
+                        continue
+                if iterationCount > 0:
+                    iterationCount -= 1
+                elif iterationCount != -1:
+                    # Time to go
+                    if idle:
+                        # Requested to put WSPR into IDLE
+                        self.__doIdle(True)
+                    break                    
+        
+        except Exception as e:
+            print('Error in script execution [%s][%s]' % (str(e), traceback.format_exc()))
+            return False
     
     # =================================================================================
     # Callback
     def __evntCallback(self, evnt):
-        """ Process event from WSPR """
+        """
+        Process event from WSPR
+        
+        Arguments:
+            evnt    --  'band:n'
+                        'cycle'
+        
+        """
+        
+        if 'band' in event:
+            if self.__waitingBandNo != None:            
+                _, bandNo = eventsplit(':')
+                if bandNo == self.__waitingBandNo:
+                    self.__bandEvt.set()
+        elif 'cycle' in event:
+            self.__cycleEvt.set()
+    
+    def __antControlCallback(self, msg):
+        """
+        Callbacks from antenna control
+        
+        Arguments:
+            msg    --  msg to report
+        
+        """
+        
+        print(msg)
+        
+    # =================================================================================
+    # Execution functions
+    def __doBand(self, band):
+        """
+        Instruct WSPR to change band.
+        Wait for the band changed event as it will only do this when IDLE
+        
+        Arguments:
+            band    --  the internal band id
+            
+        """
+        
+        # Tell the event what we are waiting for
+        self.__waitingBandNo = BAND_TO_EXTERNAL(band)
+        
+        # Send the UDP command to WSPR to change band
+        self.__cmdSock.sendto(('band:%d' % BAND_TO_EXTERNAL(band)).encode('utf-8'), (CMD_IP, CMD_PORT))
+        # Wait for WSPR to change bands
+        # This can take up to 2m as switching occurs during IDLE
+        timeout = EVNT_TIMEOUT * 30 # Allow 150s
+        if not self.__bandEvt.wait(EVNT_TIMEOUT):
+            timeout -= EVNT_TIMEOUT
+            if timeout <= 0:
+                # Timeout waiting for the band switch
+                print('Timeout waiting for WSPR to switch bands!')
+                return False
+        self.__bandEvt.clear()
+        self.__waitingBandNo = None
+        return True
+             
+    def __doTx(self, tx):
+        """
+        Instruct WSPR to set the TX feature to 0% or 20%
+        
+        Arguments:
+            tx    --  True = 20%, False = 0%
+            
+        """
+        
+        if tx: cmd = 1
+        else: cmd = 0
+        self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+    
+    def __doAntenna(self, antenna, band):
+        """
+        Instruct the antenna switching module to switch to the given antenna
+        Note this depends on the band
+        
+        Arguments:
+            antenna     --  the internal antenna name
+            band        --  the internal band name
+            
+        """
+        
+        if band == B_2: table = ANTENNA_TO_VU_MATRIX
+        else: table = ANTENNA_TO_HF_MATRIX
+        
+        matrix = table[antenna]
+        for relay, state in matrix.iteritems():
+            if key != RELAY_NA:
+                self.__antControl.set_relay(relay, state)            
+    
+    def __doSpot(self, spot):
+        """
+        Instruct WSPR to set the spot feature on or off
+        
+        Arguments:
+            spot    --  True = ON, False = OFF
+            
+        """
+        
+        if spot: cmd = 1
+        else: cmd = 0
+        self.__cmdSock.sendto(('upload:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+    
+    def __doRadio(self, radio, band):
+        """
+        If external then do nothing.
+        If internal then use a CAT command to change the radio frequency.
+        The band idntifies the frequency via a lookup table.
+        
+        Arguments:
+            radio    --  INTERNAL or EXTERNAL
+            band     --  the internal band name
+            
+            
+        """
         
         pass
+    
+    def __doCycles(self, cycles, tx):
+        """
+        Wait for WSPR to execute 'cycles' cycles.
+        A cycle is either an RX cycle or an RX followed by a TX cycle
+        
+        Arguments:
+            cycles    --  the number of cycles to wait for
+            tx        --  True if running TX cycles
+            
+        """
+        
+        # Cycles are 2m for an RX and 2m for a TX
+        # Calculate the total timeout for the number of cycles
+        # Add extra as we could be idle waiting to start
+        txtime = 0
+        if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
+        timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
+        # Add extra 2m as we could be idle waiting to start
+        timeout = timeout + 120
+        cycleCount = cycles
+        while True:
+            if not self.__cycleEvt.wait(EVNT_TIMEOUT):
+                timeout -= EVNT_TIMEOUT
+                if timeout <= 0:
+                    # Timeout waiting for the cycle count
+                    print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycleCount))
+                    return False
+            self.__cycleEvt.clear()
+            cycleCount -= 1
+            if cycleCount <= 0:
+                # All done
+                break
+        return True
+    
+    def __doIdle(self, state):
+        """
+        Instruct WSPR to enter the IDLE mode.
+        
+        Arguments:
+            state    --  True == IDLE
+            
+        """
+        
+        if state: cmd = 1
+        else: cmd = 0
+        self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
     
 """
 
@@ -263,21 +490,31 @@ class EventThrd (threading.Thread):
 def main():
     
     try:
-        # The application 
+        # The application
+        print('Starting automation run...')
         app = Automate('..\\scripts\\script-1.txt')
         # Parse the file
         r, struct = app.parseScript()
-        print (struct)
-        r = app.executeScript()
+        if r:
+            print (struct)
+            r = app.executeScript()
+            if not r:
+                print('Execution error!')
+        else:
+            print('Error in parse!')
         app.terminate()
         sys.exit(0)
     except KeyboardInterrupt:
+        print('User terminated - exiting')
         app.terminate()
         sys.exit()    
     except Exception as e:
+        print ('Application Exception [%s][%s] - exiting' % (str(e), traceback.format_exc()))
         app.terminate()
-        print ('Exception','Exception [%s][%s]' % (str(e), traceback.format_exc()))
- 
+        sys.exit()  
+    print('Automation run complete - exiting')
+    sys.exit()
+    
 # Entry point       
 if __name__ == '__main__':
     main()            
