@@ -78,7 +78,17 @@ CAT_SETTINGS = {
     ],
     SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
 }
-    
+ 
+# CAT command set to be used by callers
+CAT_LOCK = 'catlock'
+CAT_PTT = 'catptt'
+CAT_FREQ_SET = 'catfreqset'
+CAT_MODE_SET = 'catmodeset'
+CAT_FREQ_GET = 'catfreqget'
+CAT_MODE_GET = 'catmodeget'
+# Only USB required
+MODE_USB = 'usb'
+
 # ===============================================================================
 # Band definitions
 B_160   = 'B_160'

@@ -86,21 +86,28 @@ class Automate:
         # Create the event objects
         self.__bandEvt = threading.Event()
         self.__cycleEvt = threading.Event()
+        self.__catEvt = threading.Event()
+        self.__relayEvt = threading.Event()
         
         # Instance vars
         self.__waitingBandNo = None
+        self.__catRunning = False
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(RELAY_DEFAULT_STATE, ARDUINO_ADDR, self.__antControlCallback)
     
         # Create the CAT controller
         self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
+        if self.__cat.start_thrd():
+            self.__catRunning = True
+        self.__cat.set_callback(self.__catCallback)    
         
     def terminate(self):
         """ Terminate and exit """
         
         self.__evntThread.terminate()
         self.__evntThread.join()
+        self.__cat.terminate()
     
     # =================================================================================
     # Main processing     
@@ -304,7 +311,20 @@ class Automate:
         
         """
         
-        print(msg)
+        if 'success' in msg:
+            self.__relayEvt.set()
+        
+    def __catCallback(self, msg):
+        """
+        Callbacks from CAT control
+        
+        Arguments:
+            msg    --  msg to report
+        
+        """
+        
+        if 'success' in msg:
+            self.__catEvt.set()
         
     # =================================================================================
     # Execution functions
@@ -366,7 +386,12 @@ class Automate:
         matrix = table[antenna]
         for relay, state in matrix.iteritems():
             if key != RELAY_NA:
-                self.__antControl.set_relay(relay, state)            
+                self.__antControl.set_relay(relay, state)
+                if not self.__relayEvt.wait(EVNT_TIMEOUT):
+                    print('Timeout waiting for antenna changeover to respond to relay change!')
+                    return False
+                self.__relayEvt.clear()
+        return True
     
     def __doSpot(self, spot):
         """
@@ -394,7 +419,28 @@ class Automate:
             
         """
         
-        pass
+        if radio == INTERNAL:
+            # Check connectivity
+            if not self.__catRunning:
+                if self.__cat.start_thrd():
+                    self.__catRunning = True
+                else:
+                    return False
+                    
+            # Get the frequency for the band
+            dialFrequency = BAND_TO_FREQ[band]
+            self.__catEvt.clear()
+            self.__cat.do_command(CAT_MODE_SET, MODE_USB)
+            if not self.__catEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for radio to respond to mode change!')
+                return False
+            self.__catEvt.clear()
+            self.__cat.do_command(CAT_FREQ_SET, dialFrequency)
+            if not self.__catEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for radio to respond to frequency change!')
+                return False
+            self.__catEvt.clear()
+            return True                
     
     def __doCycles(self, cycles, tx):
         """
@@ -407,7 +453,7 @@ class Automate:
             
         """
         
-        # Cycles are 2m for an RX and 2m for a TX
+        # Cycles are 2 mins for an RX and 2 mins for a TX
         # Calculate the total timeout for the number of cycles
         # Add extra as we could be idle waiting to start
         txtime = 0
@@ -496,7 +542,7 @@ def main():
         # Parse the file
         r, struct = app.parseScript()
         if r:
-            print (struct)
+            #print (struct)
             r = app.executeScript()
             if not r:
                 print('Execution error!')
