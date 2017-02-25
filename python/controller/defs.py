@@ -61,6 +61,24 @@ C_RADIO = 5
 R_INTERNAL = 'sinternal'
 R_EXTERNAL = 'rexternal'
 
+# CAT variants
+FT_817ND = 'FT-817ND'
+IC7100 = 'IC7100'
+CAT_VARIANTS = [FT_817ND, IC7100]
+
+CAT_SETTINGS = {
+    VARIANT: CAT_VARIANTS[0],
+    NETWORK: [
+        # ip, port
+        None, None
+    ],
+    SERIAL: [
+        #com port, baud rate
+        'COM5', '9600'
+    ],
+    SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
+}
+    
 # ===============================================================================
 # Band definitions
 B_160   = 'B_160'

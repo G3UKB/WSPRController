@@ -94,7 +94,7 @@ class Automate:
         self.__antControl = antcontrol.AntControl(RELAY_DEFAULT_STATE, ARDUINO_ADDR, self.__antControlCallback)
     
         # Create the CAT controller
-        self.__cat = cat.CAT(variant, settings)
+        self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
         
     def terminate(self):
         """ Terminate and exit """
