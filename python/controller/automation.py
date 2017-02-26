@@ -259,12 +259,12 @@ class Automate:
                     #    continue
                     #if not self.__doTx(tx):
                     #    continue
-                    #if not self.__doAntenna(antenna, band):
-                    #    continue
+                    if not self.__doAntenna(antenna, band):
+                        continue
                     #if not self.__doSpot(spot):
                     #    continue
-                    if not self.__doRadio(radio, band):
-                        continue
+                    #if not self.__doRadio(radio, band):
+                    #    continue
                     # This will only return when the cycles are complete
                     #if not self.__doCycles(cycles):
                     #    continue
