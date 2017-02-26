@@ -1053,6 +1053,7 @@ def update():
                 evtsock.sendto(('band:%d' % lastBndCmd).encode('UTF-8'), (extAddr[0], EVT_PORT))
                 lastBndCmd = -1
                 # Try to adjust the level to around 0dB as different bands will have different noise levels
+                """
                 iterations = 5
                 while iterations > 0:
                     if ndb < LOW_DB or ndb > HIGH_DB:
@@ -1066,7 +1067,7 @@ def update():
                         iterations -= 1
                     else:
                         break
-        
+                """
         # Check for events due
         if receiving: currentState = S_RX
         elif transmitting: currentState = S_TX
