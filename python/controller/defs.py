@@ -66,7 +66,7 @@ R_INTERNAL = 'rinternal'
 R_EXTERNAL = 'rexternal'
 
 WIN_PORT = 'COM5'
-LIN_PORT = '/dev/ttyACM0'
+LIN_PORT = '/dev/ttyACM1'
 
 if sys.platform == 'linux':
     port = LIN_PORT
