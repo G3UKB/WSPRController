@@ -295,12 +295,12 @@ class Automate:
         
         """
         
-        if 'band' in event:
+        if 'band' in evnt:
             if self.__waitingBandNo != None:            
-                _, bandNo = eventsplit(':')
+                _, bandNo = evnt.split(':')
                 if bandNo == self.__waitingBandNo:
                     self.__bandEvt.set()
-        elif 'cycle' in event:
+        elif 'cycle' in evnt:
             self.__cycleEvt.set()
     
     def __antControlCallback(self, msg):
