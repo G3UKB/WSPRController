@@ -255,19 +255,19 @@ class Automate:
                     # Unpack
                     band, tx, antenna, cycles, spot, radio = instruction                    
                     # This will only return when the band change completes
-                    #if not self.__doBand(band):
-                    #    continue
-                    #if not self.__doTx(tx):
-                    #    continue
+                    if not self.__doBand(band):
+                        continue
+                    if not self.__doTx(tx):
+                        continue
                     if not self.__doAntenna(antenna, band):
                         continue
-                    #if not self.__doSpot(spot):
-                    #    continue
-                    #if not self.__doRadio(radio, band):
-                    #    continue
+                    if not self.__doSpot(spot):
+                        continue
+                    if not self.__doRadio(radio, band):
+                        continue
                     # This will only return when the cycles are complete
-                    #if not self.__doCycles(cycles):
-                    #    continue
+                    if not self.__doCycles(cycles):
+                        continue
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
