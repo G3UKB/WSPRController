@@ -133,7 +133,7 @@ class Automate:
             lines = f.readlines()
         except Exception as e:
             print('Error in file access [%s][%s]' % (self.__scriptPath, str(e)))
-        
+            return
         try:    
             # Process file
             cmd, value = lines[0].split(':')
@@ -544,7 +544,7 @@ def main():
     try:
         # The application
         print('Starting automation run...')
-        app = Automate('..\\scripts\\script-1.txt')
+        app = Automate(os.path.join('..', 'scripts', 'script-1.txt'))
         # Parse the file
         r, struct = app.parseScript()
         if r:

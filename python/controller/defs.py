@@ -65,6 +65,14 @@ C_RADIO = 5
 R_INTERNAL = 'rinternal'
 R_EXTERNAL = 'rexternal'
 
+WIN_PORT = 'COM5'
+LIN_PORT = '/dev/usb-MICROBIT_2.0_AB_1258_Remote_Rig_125800010449-if05M5'
+
+if sys.platform == 'linux':
+    port = LIN_PORT
+else:
+    port = WIN_PORT
+    
 # CAT settings
 CAT_SETTINGS = {
     VARIANT: CAT_VARIANTS[0],
@@ -74,7 +82,7 @@ CAT_SETTINGS = {
     ],
     SERIAL: [
         #com port, baud rate
-        'COM5', '19200'
+        port, '19200'
     ],
     SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
 }
