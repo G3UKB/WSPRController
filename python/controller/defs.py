@@ -21,6 +21,10 @@
 #     bob@bobcowdery.plus.com
 #
 
+import sys, os
+sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
+from commondefs import *
+
 # ===============================================================================
 # Network
 CMD_IP = '127.0.0.1'
@@ -61,19 +65,7 @@ C_RADIO = 5
 R_INTERNAL = 'sinternal'
 R_EXTERNAL = 'rexternal'
 
-CAT_SETTINGS = 'catsettings'
-NETWORK = 'network'
-SERIAL = 'serial'
-SELECT = 'select'
-VARIANT = 'variant'
-CAT_UDP = 'catudp'
-CAT_SERIAL = 'catserial'
-
-# CAT variants
-FT_817ND = 'FT-817ND'
-IC7100 = 'IC7100'
-CAT_VARIANTS = [FT_817ND, IC7100]
-
+# CAT settings
 CAT_SETTINGS = {
     VARIANT: CAT_VARIANTS[0],
     NETWORK: [
@@ -86,16 +78,6 @@ CAT_SETTINGS = {
     ],
     SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
 }
- 
-# CAT command set to be used by callers
-CAT_LOCK = 'catlock'
-CAT_PTT = 'catptt'
-CAT_FREQ_SET = 'catfreqset'
-CAT_MODE_SET = 'catmodeset'
-CAT_FREQ_GET = 'catfreqget'
-CAT_MODE_GET = 'catmodeget'
-# Only USB required
-MODE_USB = 'usb'
 
 # ===============================================================================
 # Band definitions
