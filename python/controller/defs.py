@@ -62,7 +62,7 @@ C_RADIO = 5
 
 # ===============================================================================
 # Radio definitions
-R_INTERNAL = 'sinternal'
+R_INTERNAL = 'rinternal'
 R_EXTERNAL = 'rexternal'
 
 # CAT settings
@@ -74,7 +74,7 @@ CAT_SETTINGS = {
     ],
     SERIAL: [
         #com port, baud rate
-        'COM5', '9600'
+        'COM5', '19200'
     ],
     SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
 }
@@ -187,4 +187,4 @@ ANTENNA_TO_VU_MATRIX = {
 
 # Default parameters
 RELAY_DEFAULT_STATE = {1: RELAY_OFF, 2:RELAY_OFF, 3: RELAY_OFF, 4: RELAY_OFF, 5: RELAY_OFF, 6: RELAY_OFF}
-ARDUINO_ADDR = ('192, 168, 1, 178', 8888)
+ARDUINO_ADDR = ('192.168.1.178', 8888)

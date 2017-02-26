@@ -23,6 +23,7 @@
 
 import os, sys, socket, traceback
 import threading
+from time import sleep
 
 from defs import *
 # We need to pull in antennaControl and cat from the Common project
@@ -244,40 +245,33 @@ class Automate:
             if self.__script[S_STOP] == S_IDLE:
                 idle = True
             else:
-                idle = False
-                
+                idle = False   
             while True:
                 # Do one run through the script
                 # if we hit an error we report on the instruction and the error then skip the line
                 # and attempt to carry on.
                 for instruction in self.__script[S_COMMANDS]:
+                    sleep(3)
                     # Unpack
                     band, tx, antenna, cycles, spot, radio = instruction                    
                     # This will only return when the band change completes
-                    #print('Band')
                     if not self.__doBand(band):
                         continue
-                    #print('TX')
                     if not self.__doTx(tx):
                         continue
-                    #print('Antenna')
                     if not self.__doAntenna(antenna, band):
                         continue
-                    #print('Spot')
                     if not self.__doSpot(spot):
                         continue
-                    #print('Radio')
-                    if not self.__doRadio(radio):
+                    if not self.__doRadio(radio, band):
                         continue
                     # This will only return when the cycles are complete
-                    #print('Cycles')
                     if not self.__doCycles(cycles):
                         continue
-                if iterationCount > 0:
+                if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
                     # Time to go
-                    #print('Going')
                     if idle:
                         # Requested to put WSPR into IDLE
                         self.__doIdle(True)
@@ -330,8 +324,10 @@ class Automate:
         
         """
         
-        if 'success' in msg:
+        if msg[0]:
             self.__catEvt.set()
+        else:
+            print('CAT reported: ', msg)
         
     # =================================================================================
     # Execution functions
@@ -391,8 +387,8 @@ class Automate:
         else: table = ANTENNA_TO_HF_MATRIX
         
         matrix = table[antenna]
-        for relay, state in matrix.iteritems():
-            if key != RELAY_NA:
+        for relay, state in matrix.items():
+            if relay != RELAY_NA:
                 self.__antControl.set_relay(relay, state)
                 if not self.__relayEvt.wait(EVNT_TIMEOUT):
                     print('Timeout waiting for antenna changeover to respond to relay change!')
@@ -420,13 +416,13 @@ class Automate:
         The band idntifies the frequency via a lookup table.
         
         Arguments:
-            radio    --  INTERNAL or EXTERNAL
+            radio    --  R_INTERNAL or R_EXTERNAL
             band     --  the internal band name
             
             
         """
         
-        if radio == INTERNAL:
+        if radio == R_INTERNAL:
             # Check connectivity
             if not self.__catRunning:
                 if self.__cat.start_thrd():
@@ -438,12 +434,14 @@ class Automate:
             dialFrequency = BAND_TO_FREQ[band]
             self.__catEvt.clear()
             self.__cat.do_command(CAT_MODE_SET, MODE_USB)
-            if not self.__catEvt.wait(EVNT_TIMEOUT):
+            #if not self.__catEvt.wait(EVNT_TIMEOUT):
+            if not self.__catEvt.wait(10):
                 print('Timeout waiting for radio to respond to mode change!')
                 return False
             self.__catEvt.clear()
             self.__cat.do_command(CAT_FREQ_SET, dialFrequency)
-            if not self.__catEvt.wait(EVNT_TIMEOUT):
+            #if not self.__catEvt.wait(EVNT_TIMEOUT):
+            if not self.__catEvt.wait(10):
                 print('Timeout waiting for radio to respond to frequency change!')
                 return False
             self.__catEvt.clear()
