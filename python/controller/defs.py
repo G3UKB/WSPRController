@@ -25,12 +25,12 @@
 # Network
 CMD_IP = '127.0.0.1'
 CMD_PORT = 10000
-EVT_IP = '127.0.0.1'
-EVT_PORT = 10001
+EVNT_IP = '127.0.0.1'
+EVNT_PORT = 10001
 
 # ===============================================================================
 # Timeouts
-BAND_EVNT_TIMEOUT = 5
+EVNT_TIMEOUT = 5
 
 # ===============================================================================
 # Internal structure for script files
@@ -60,6 +60,14 @@ C_RADIO = 5
 # Radio definitions
 R_INTERNAL = 'sinternal'
 R_EXTERNAL = 'rexternal'
+
+CAT_SETTINGS = 'catsettings'
+NETWORK = 'network'
+SERIAL = 'serial'
+SELECT = 'select'
+VARIANT = 'variant'
+CAT_UDP = 'catudp'
+CAT_SERIAL = 'catserial'
 
 # CAT variants
 FT_817ND = 'FT-817ND'

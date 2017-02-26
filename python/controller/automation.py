@@ -25,11 +25,9 @@ import os, sys, socket, traceback
 import threading
 
 from defs import *
-# We need to pull in antennaControl from the AntennaSwitch project
-sys.path.append(os.path.join('..','..','..','..','AntennaSwitch','trunk','python'))
+# We need to pull in antennaControl and cat from the Common project
+sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 import antcontrol
-# We need to pull in cat from the LoopControl project
-sys.path.append(os.path.join('..','..','..','..','LoopControl','trunk','python', 'common'))
 import cat
 
 """
@@ -80,8 +78,8 @@ class Automate:
         self.__cmdSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         # Start the event thread
-        self.__evntThread = EventThread(self.__evntCallback)
-        self.__evntThread.start()
+        self.__eventThrd = EventThrd(self.__evntCallback)
+        self.__eventThrd.start()
         
         # Create the event objects
         self.__bandEvt = threading.Event()
@@ -94,7 +92,7 @@ class Automate:
         self.__catRunning = False
         
         # Create the antenna controller
-        self.__antControl = antcontrol.AntControl(RELAY_DEFAULT_STATE, ARDUINO_ADDR, self.__antControlCallback)
+        self.__antControl = antcontrol.AntControl(ARDUINO_ADDR, RELAY_DEFAULT_STATE, self.__antControlCallback)
     
         # Create the CAT controller
         self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
@@ -105,8 +103,8 @@ class Automate:
     def terminate(self):
         """ Terminate and exit """
         
-        self.__evntThread.terminate()
-        self.__evntThread.join()
+        self.__eventThrd.terminate()
+        self.__eventThrd.join()
         self.__cat.terminate()
     
     # =================================================================================
@@ -256,23 +254,30 @@ class Automate:
                     # Unpack
                     band, tx, antenna, cycles, spot, radio = instruction                    
                     # This will only return when the band change completes
+                    #print('Band')
                     if not self.__doBand(band):
                         continue
+                    #print('TX')
                     if not self.__doTx(tx):
                         continue
+                    #print('Antenna')
                     if not self.__doAntenna(antenna, band):
                         continue
+                    #print('Spot')
                     if not self.__doSpot(spot):
                         continue
+                    #print('Radio')
                     if not self.__doRadio(radio):
                         continue
                     # This will only return when the cycles are complete
+                    #print('Cycles')
                     if not self.__doCycles(cycles):
                         continue
                 if iterationCount > 0:
                     iterationCount -= 1
                 elif iterationCount != -1:
                     # Time to go
+                    #print('Going')
                     if idle:
                         # Requested to put WSPR into IDLE
                         self.__doIdle(True)
@@ -281,6 +286,8 @@ class Automate:
         except Exception as e:
             print('Error in script execution [%s][%s]' % (str(e), traceback.format_exc()))
             return False
+    
+        return True
     
     # =================================================================================
     # Callback
@@ -339,10 +346,10 @@ class Automate:
         """
         
         # Tell the event what we are waiting for
-        self.__waitingBandNo = BAND_TO_EXTERNAL(band)
+        self.__waitingBandNo = BAND_TO_EXTERNAL[band]
         
         # Send the UDP command to WSPR to change band
-        self.__cmdSock.sendto(('band:%d' % BAND_TO_EXTERNAL(band)).encode('utf-8'), (CMD_IP, CMD_PORT))
+        self.__cmdSock.sendto(('band:%d' % BAND_TO_EXTERNAL[band]).encode('utf-8'), (CMD_IP, CMD_PORT))
         # Wait for WSPR to change bands
         # This can take up to 2m as switching occurs during IDLE
         timeout = EVNT_TIMEOUT * 30 # Allow 150s
@@ -535,6 +542,7 @@ class EventThrd (threading.Thread):
 # Main code
 def main():
     
+    app = None
     try:
         # The application
         print('Starting automation run...')
@@ -548,15 +556,15 @@ def main():
                 print('Execution error!')
         else:
             print('Error in parse!')
-        app.terminate()
+        if app != None: app.terminate()
         sys.exit(0)
     except KeyboardInterrupt:
         print('User terminated - exiting')
-        app.terminate()
+        if app != None: app.terminate()
         sys.exit()    
     except Exception as e:
         print ('Application Exception [%s][%s] - exiting' % (str(e), traceback.format_exc()))
-        app.terminate()
+        if app != None: app.terminate()
         sys.exit()  
     print('Automation run complete - exiting')
     sys.exit()
