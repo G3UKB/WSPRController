@@ -68,7 +68,7 @@ R_EXTERNAL = 'rexternal'
 WIN_PORT = 'COM5'
 #LIN_PORT = '/dev/usb-MICROBIT_2.0_AB_1258_Remote_Rig_125800010449-if05M5'
 
-LIN_PORT = '/dev/ttyACM2'
+LIN_PORT = '/dev/ttyACM0'
 
 if sys.platform == 'linux':
     port = LIN_PORT
