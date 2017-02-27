@@ -312,6 +312,7 @@ class Automate:
                 if bandNo == self.__waitingBandNo:
                     self.__bandEvt.set()
         elif 'cycle' in evnt:
+            print('Cycle event')
             self.__cycleEvt.set()
     
     def __antControlCallback(self, msg):
@@ -488,6 +489,8 @@ class Automate:
                     # Timeout waiting for the cycle count
                     print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycleCount))
                     return False
+                else:
+                    continue
             print('Done cycles')
             self.__cycleEvt.clear()
             cycleCount -= 1
