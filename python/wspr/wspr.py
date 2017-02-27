@@ -1068,7 +1068,7 @@ def update():
                     else:
                         break
                 """
-        
+    
         # Check for events due
         if receiving: currentState = S_RX
         elif transmitting: currentState = S_TX
@@ -1078,7 +1078,7 @@ def update():
                 # End of a receive cycle
                 print('End of cycle: ', currentState, lastState)
                 evtsock.sendto('cycle'.encode('UTF-8'), (extAddr[0], EVT_PORT))
-                lastState = currentState
+        lastState = currentState
                 
         # End - Bob Cowdery (G3UKB)
         # ===============================================================================
