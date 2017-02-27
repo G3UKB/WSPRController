@@ -262,23 +262,23 @@ class Automate:
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue
-                    print('Band')
+                    #print('Band')
                     if not self.__doTx(tx):
                         continue
-                    print('TX')
+                    #print('TX')
                     if not self.__doAntenna(antenna, band):
                         continue
-                    print('Antenna')
+                    #print('Antenna')
                     if not self.__doSpot(spot):
                         continue
-                    print('Spot')
+                    #print('Spot')
                     if not self.__doRadio(radio, band):
                         continue
-                    print('Radio')
+                    #print('Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles, tx):
                         continue
-                    print('Cycles')
+                    #print('Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
@@ -480,6 +480,7 @@ class Automate:
         # Add extra 2m as we could be idle waiting to start
         timeout = timeout + 120
         cycleCount = cycles
+        print('Cycle count: ', cycleCount, timeout)
         while True:
             if not self.__cycleEvt.wait(EVNT_TIMEOUT):
                 timeout -= EVNT_TIMEOUT
@@ -487,6 +488,7 @@ class Automate:
                     # Timeout waiting for the cycle count
                     print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycleCount))
                     return False
+            print('Done cycles')
             self.__cycleEvt.clear()
             cycleCount -= 1
             if cycleCount <= 0:
