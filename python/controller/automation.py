@@ -248,7 +248,9 @@ class Automate:
             if self.__script[S_STOP] == S_IDLE:
                 idle = True
             else:
-                idle = False   
+                idle = False
+            # Make sure we are not idle
+            self.__doIdle(False)
             while True:
                 # Do one run through the script
                 # if we hit an error we report on the instruction and the error then skip the line
@@ -327,6 +329,7 @@ class Automate:
         
         """
         
+        print('CAT callback: ', msg)
         if msg[0]:
             self.__catEvt.set()
         else:
