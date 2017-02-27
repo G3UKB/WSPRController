@@ -848,7 +848,7 @@ def update():
         hopping0,ntune0,startup,nred
 
     # RAC
-    global lastBndCmd, extAddr
+    global lastBndCmd, extAddr, lastState
     # RAC
     
     tsec=time.time()
