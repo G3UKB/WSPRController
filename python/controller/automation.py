@@ -258,27 +258,34 @@ class Automate:
                 for instruction in self.__script[S_COMMANDS]:
                     sleep(3)
                     # Unpack
-                    band, tx, antenna, cycles, spot, radio = instruction                    
+                    band, tx, antenna, cycles, spot, radio = instruction
+                    print(band, tx, antenna, cycles, spot, radio, ' ...')
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue
-                    print('Band')
+                    sleep(0.1)
+                    #print('Band')
                     if not self.__doTx(tx):
                         continue
-                    print('TX')
+                    sleep(0.1)
+                    #print('TX')
                     if not self.__doAntenna(antenna, band):
                         continue
-                    print('Antenna')
+                    sleep(0.1)
+                    #print('Antenna')
                     if not self.__doSpot(spot):
                         continue
-                    print('Spot')
+                    sleep(0.1)
+                    #print('Spot')
                     if not self.__doRadio(radio, band):
                         continue
-                    print('Radio')
+                    sleep(0.1)
+                    #print('Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles, tx):
                         continue
-                    print('Cycles')
+                    sleep(0.1)
+                    #print('Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
@@ -312,7 +319,6 @@ class Automate:
                 if bandNo == self.__waitingBandNo:
                     self.__bandEvt.set()
         elif 'cycle' in evnt:
-            print('Cycle event')
             self.__cycleEvt.set()
     
     def __antControlCallback(self, msg):
@@ -481,7 +487,6 @@ class Automate:
         # Add extra 2m as we could be idle waiting to start
         timeout = timeout + 120
         cycleCount = cycles
-        print('Cycle count: ', cycleCount, timeout)
         while True:
             if not self.__cycleEvt.wait(EVNT_TIMEOUT):
                 timeout -= EVNT_TIMEOUT
@@ -491,7 +496,6 @@ class Automate:
                     return False
                 else:
                     continue
-            print('Done cycles')
             self.__cycleEvt.clear()
             cycleCount -= 1
             if cycleCount <= 0:
