@@ -262,17 +262,23 @@ class Automate:
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue
+                    print('Band')
                     if not self.__doTx(tx):
                         continue
+                    print('TX')
                     if not self.__doAntenna(antenna, band):
                         continue
+                    print('Antenna')
                     if not self.__doSpot(spot):
                         continue
+                    print('Spot')
                     if not self.__doRadio(radio, band):
                         continue
+                    print('Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles):
                         continue
+                    print('Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
@@ -300,6 +306,7 @@ class Automate:
         
         """
         
+        print(evnt, self.__waitingBandNo)
         if 'band' in evnt:
             if self.__waitingBandNo != None:            
                 _, bandNo = evnt.split(':')
@@ -329,7 +336,6 @@ class Automate:
         
         """
         
-        print('CAT callback: ', msg)
         if msg[0]:
             self.__catEvt.set()
         else:
