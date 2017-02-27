@@ -71,9 +71,12 @@ class Automate:
     
     """
         
-    def __init__(self, scriptPath):
+    def __init__(self, scriptPath, COMPort):
         
         self.__scriptPath = scriptPath
+        self.__comPort = COMPort
+        
+        CAT_SETTINGS[SERIAL][0] = self.__comPort
         
         # Create command socket
         self.__cmdSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -543,17 +546,32 @@ def main():
     app = None
     try:
         # The application
+        
+        # Arguments are:
+        #   arg0 program name (always)
+        #   arg1    --  path to script file
+        #   arg2    --  COM port for CAT control
+        #
+        if len(sys.argv) != 3:
+            print('Usage: python automation.py path-to-script-file, COM-port-for-CAT')
+            sys.exit(0)
+        path = sys.argv[1]
+        com = sys.argv[2]
+        if not os.path.exists(path):
+            print('Error: Invalid path to script file!')
+            sys.exit(0)
+            
         print('Starting automation run...')
-        app = Automate(os.path.join('..', 'scripts', 'script-1.txt'))
+        app = Automate(path, com)
         # Parse the file
         r, struct = app.parseScript()
         if r:
             #print (struct)
             r = app.executeScript()
             if not r:
-                print('Execution error!')
+                print('Error: Execution error!')
         else:
-            print('Error in parse!')
+            print('Error: Failed in parse!')
         if app != None: app.terminate()
         sys.exit(0)
     except KeyboardInterrupt:
