@@ -1073,7 +1073,6 @@ def update():
         if receiving: currentState = S_RX
         elif transmitting: currentState = S_TX
         else: currentState = S_IDLE
-        print('Current state: ', currentState, 'Last state: ', lastState)
         if lastState != currentState:
             if lastState == S_RX and currentState == S_IDLE:
                 # End of a receive cycle
