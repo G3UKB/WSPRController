@@ -383,6 +383,7 @@ class Automate:
         if tx: cmd = 1
         else: cmd = 0
         self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
     
     def __doAntenna(self, antenna, band):
         """
@@ -420,6 +421,7 @@ class Automate:
         if spot: cmd = 1
         else: cmd = 0
         self.__cmdSock.sendto(('upload:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
     
     def __doRadio(self, radio, band):
         """
@@ -505,6 +507,7 @@ class Automate:
         if state: cmd = 1
         else: cmd = 0
         self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
     
 """
 
