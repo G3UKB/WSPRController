@@ -443,6 +443,7 @@ class Automate:
                 powerdBm = self.__powertodbm(power)
                 availablePwrdBm = self.__powertodbm(availablePwr)
                 diffdBm = availablePwrdBm - powerdBm
+                if diffdBm > 30: diffdBm = 30
                 self.__cmdSock.sendto(('power:%d' % diffdBm).encode('utf-8'), (CMD_IP, CMD_PORT))
         else:
             cmd = 0

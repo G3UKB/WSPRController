@@ -1029,6 +1029,7 @@ def update():
                 _, asciipwr = asciidata.split(':')
                 idBm = int(asciipwr)
                 # Adjust power by idBm
+                advanced.isc1.set(-idBm)
             elif 'idle' in asciidata:
                 _, asciiidle = asciidata.split(':')
                 iidle = int(asciiidle)
