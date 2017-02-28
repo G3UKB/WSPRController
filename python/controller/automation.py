@@ -185,8 +185,14 @@ class Automate:
                 if len(toks) != 6:
                     print('Line %d in script file contains %d tokens, expected 6 [%s]' % (n, len(toks, line)))
                     return False, None
-                # Line contains [band, tx, antenna, cycles, spot, radio]
+                # Line contains [start, end, band, tx, antenna, cycles, spot, radio]
                 # Translate the items into an internal representation
+                # process TIME
+                if int(toks[C_START]) < 0 or int(toks[C_START]) > 23 or int(toks[C_STOP]) < 0 or int(toks[C_STOP]) > 23:
+                    print('Invalid timespan %s, %s at line %d' % (toks[C_START], toks[C_STOP], n))
+                    return False, None
+                self.__script[S_COMMANDS][n-2].append(int(toks[C_START]))
+                self.__script[S_COMMANDS][n-2].append(int(toks[C_STOP]))
                 # Process BAND
                 if toks[C_BAND] in BAND_TO_INTERNAL:
                     self.__script[S_COMMANDS][n-2].append(BAND_TO_INTERNAL[toks[C_BAND]])
@@ -258,8 +264,29 @@ class Automate:
                 for instruction in self.__script[S_COMMANDS]:
                     sleep(3)
                     # Unpack
-                    band, tx, antenna, cycles, spot, radio = instruction
-                    print(band, tx, antenna, cycles, spot, radio, ' ...')
+                    startHour, stopHour, band, tx, antenna, cycles, spot, radio = instruction
+                    print(startHour, stopHour, band, tx, antenna, cycles, spot, radio, ' ...')
+                    # Check if time to run this cycle
+                    runCycle = False
+                    currentHour = datetime.time().hour
+                    if (startHour == 0 and stopHour == 0):
+                        # This means all day
+                        runCycle = True
+                    elif endHour < startHour:
+                        # Crossing midnight
+                        if currentHour <= endHour:
+                            # Past midnight
+                            runCycle = True
+                        else:
+                            # Before midnight
+                            if currentHour >= startHour:
+                                runCycle = True
+                    else:
+                        # Normal progression
+                        if startHour <= currentHour and endHour >= currentHour:
+                            runCycle = True
+                    if not runCycle: continue
+                    
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue

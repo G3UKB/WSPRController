@@ -53,12 +53,14 @@ S_CONTINUE = 'scontinue'
 # Command section
 S_COMMANDS = 'scommands'
 # Offsets into command structure
-C_BAND = 0
-C_TX = 1
-C_ANTENNA = 2
-C_CYCLES = 3
-C_SPOT = 4
-C_RADIO = 5
+C_START = 0
+C_END = 1
+C_BAND = 2
+C_TX = 3
+C_ANTENNA = 4
+C_CYCLES = 5
+C_SPOT = 6
+C_RADIO = 7
 
 # ===============================================================================
 # Radio definitions
