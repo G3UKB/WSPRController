@@ -121,8 +121,9 @@ class Automate:
             {
                 S_RUN: [S_REPEAT|S_LOOP|S_ONCE, param, param, ...],
                 S_STOP: S_IDLE | S_CONTINUE,
+                S_POWER: n watts,
                 S_COMMANDS: [
-                    [band, tx, antenna, cycles, spot, radio],
+                    [start, end, band, tx, power, antenna, cycles, spot, radio],
                     [ ... ],
                     ...
                 ]
@@ -157,7 +158,7 @@ class Automate:
                     print("'RUN' line must contain REPEAT, LOOP or ONCE")
                     return False, None
             else:
-                print("First line in the script file must be 'RUN'")
+                print("Line 1 in the script file must be 'RUN'")
                 return False, None
             
             cmd, value = lines[1].split(':')
@@ -170,9 +171,21 @@ class Automate:
                     print("'STOP' line must contain IDLE or CONTINUE")
                     return False, None
             else:
-                print("Second line in the script file must be 'STOP'")
+                print("Line 2 in the script file must be 'STOP'")
                 return False, None
             
+            cmd, value = lines[2].split(':')
+            if cmd.lower() == 'power':
+                try:
+                    value = float(value)
+                    self.__script[S_POWER] = value
+                except Exception:
+                    print('POWER line must have a value numerical power')
+                    return False, None
+            else:
+                print("Line 3 in the script file must be 'POWER'")
+                return False, None    
+                
             # Process command lines
             self.__script[S_COMMANDS] = []
             n = -1
@@ -185,7 +198,7 @@ class Automate:
                 if len(toks) != 6:
                     print('Line %d in script file contains %d tokens, expected 6 [%s]' % (n, len(toks, line)))
                     return False, None
-                # Line contains [start, end, band, tx, antenna, cycles, spot, radio]
+                # Line contains [start, end, band, tx, power, antenna, cycles, spot, radio]
                 # Translate the items into an internal representation
                 # process TIME
                 if int(toks[C_START]) < 0 or int(toks[C_START]) > 23 or int(toks[C_STOP]) < 0 or int(toks[C_STOP]) > 23:
@@ -206,6 +219,15 @@ class Automate:
                     print('Invalid TX %s at line %d' % (toks[C_TX], n))
                     return False, None
                 self.__script[S_COMMANDS][n-2].append(tx)
+                # Process power
+                if toks[C_PWR] >= 0.001 and toks[C_PWR] <= 5.0:
+                    if toks[C_PWR] > self.__script[S_POWER]:
+                        print('Power level in line %d is greater than the available TX power!' % (n))
+                        return False, None
+                    self.__script[S_COMMANDS][n-2].append(toks[C_PWR])
+                else:
+                    print('Power must be between 0.001 and 5.0 watts')
+                    return False, None
                 # Process ANTENNA
                 if toks[C_ANTENNA] in ANTENNA_TO_INTERNAL:
                     self.__script[S_COMMANDS][n-2].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
@@ -264,8 +286,8 @@ class Automate:
                 for instruction in self.__script[S_COMMANDS]:
                     sleep(3)
                     # Unpack
-                    startHour, stopHour, band, tx, antenna, cycles, spot, radio = instruction
-                    print(startHour, stopHour, band, tx, antenna, cycles, spot, radio, ' ...')
+                    startHour, stopHour, band, tx, power, antenna, cycles, spot, radio = instruction
+                    print(startHour, stopHour, band, tx, power, antenna, cycles, spot, radio, ' ...')
                     # Check if time to run this cycle
                     runCycle = False
                     currentHour = datetime.time().hour
@@ -292,7 +314,7 @@ class Automate:
                         continue
                     sleep(0.1)
                     #print('Band')
-                    if not self.__doTx(tx):
+                    if not self.__doTx(tx, power):
                         continue
                     sleep(0.1)
                     #print('TX')
@@ -404,7 +426,7 @@ class Automate:
         self.__waitingBandNo = None
         return True
              
-    def __doTx(self, tx):
+    def __doTx(self, tx, power):
         """
         Instruct WSPR to set the TX feature to 0% or 20%
         
@@ -413,8 +435,18 @@ class Automate:
             
         """
         
-        if tx: cmd = 1
-        else: cmd = 0
+        if tx:
+            cmd = 1
+            # Do any power correction
+            availablePwr = self.__script[S_POWER]
+            if power != availablePwr:
+                powerdBm = self.__powertodbm(power)
+                availablePwrdBm = self.__powertodbm(availablePwr)
+                diffdBm = availablePwrdBm - powerdBm
+                self.__cmdSock.sendto(('power:%d' % diffdBm).encode('utf-8'), (CMD_IP, CMD_PORT))
+        else:
+            cmd = 0
+        # Do TX command
         self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
         return True
     
@@ -544,6 +576,30 @@ class Automate:
         self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
         return True
     
+    # Helpers
+    
+    def __powertodbm(self, power):
+        """
+        Convert power level to dbM
+        
+        Aerguments
+            power   --  power in watts to convert
+        
+        """
+        
+        return int(10*math.log10(power*1000))
+        
+    def __dBmtopower(self, dBm):
+        """
+        Convert dbM to power in watts
+        
+        Arguments:
+            dBm     --  dBm level to convert
+        
+        """
+        
+        return round(math.pow(10, dBm/10)/1000)
+        
 """
 
 Event thread.

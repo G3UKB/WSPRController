@@ -1008,6 +1008,7 @@ def update():
             # Commands are as follows:
             #   'band:n'    where n is 2 (160m) - 14 (2m)
             #   'tx:n'      where n=0 (no TX), n=1 (20% TX)
+            #   'power:n    where n is the dBm reduction
             #   'idle:n     where n=0 (set IDLE), n=1 (set RUN)
             #   'upload:n'  where n=0 (don't upload spots), n=1 (upload spots)
             if 'band' in asciidata:
@@ -1024,6 +1025,10 @@ def update():
                     ipctx.set(0)
                 else:
                     ipctx.set(20)
+            elif 'power' in asciidata:
+                _, asciipwr = asciidata.split(':')
+                idBm = int(asciipwr)
+                # Adjust power by idBm
             elif 'idle' in asciidata:
                 _, asciiidle = asciidata.split(':')
                 iidle = int(asciiidle)

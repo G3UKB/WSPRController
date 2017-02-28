@@ -50,6 +50,9 @@ S_STOP = 'sstop'
 S_IDLE = 'sidle'
 S_CONTINUE = 'scontinue'
 
+# Power section
+S_POWER
+
 # Command section
 S_COMMANDS = 'scommands'
 # Offsets into command structure
@@ -57,10 +60,11 @@ C_START = 0
 C_END = 1
 C_BAND = 2
 C_TX = 3
-C_ANTENNA = 4
-C_CYCLES = 5
-C_SPOT = 6
-C_RADIO = 7
+C_PWR = 4
+C_ANTENNA = 5
+C_CYCLES = 6
+C_SPOT = 7
+C_RADIO = 8
 
 # ===============================================================================
 # Radio definitions
