@@ -223,8 +223,8 @@ class Automate:
                 if n==0 or n==1: continue
                 self.__script[S_COMMANDS].append([])
                 toks = line.split(',')
-                if len(toks) != 6:
-                    print('Line %d in script file contains %d tokens, expected 6 [%s]' % (n, len(toks, line)))
+                if len(toks) != 9:
+                    print('Line %d in script file contains %d tokens, expected 9 [%s]' % (n, len(toks), line))
                     return False, None
                 # Line contains [start, end, band, tx, power, antenna, cycles, spot, radio]
                 # Translate the items into an internal representation
