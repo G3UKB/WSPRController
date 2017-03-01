@@ -483,15 +483,20 @@ class Automate:
         # Wait for WSPR to change bands
         # This can take up to 2m as switching occurs during IDLE
         timeout = EVNT_TIMEOUT * 30 # Allow 150s
-        if not self.__bandEvt.wait(EVNT_TIMEOUT):
-            timeout -= EVNT_TIMEOUT
-            if timeout <= 0:
-                # Timeout waiting for the band switch
-                print('Timeout waiting for WSPR to switch bands!')
-                return False
+        r = False
+        while True:
+            if self.__bandEvt.wait(EVNT_TIMEOUT):
+                r = True
+                break
+            else:
+                timeout -= EVNT_TIMEOUT
+                if timeout <= 0:
+                    # Timeout waiting for the band switch
+                    print('Timeout waiting for WSPR to switch bands!')
+                    break
         self.__bandEvt.clear()
         self.__waitingBandNo = None
-        return True
+        return r
              
     def __doTx(self, tx, power):
         """
@@ -609,14 +614,12 @@ class Automate:
             dialFrequency = BAND_TO_FREQ[band]
             self.__catEvt.clear()
             self.__cat.do_command(CAT_MODE_SET, MODE_USB)
-            #if not self.__catEvt.wait(EVNT_TIMEOUT):
-            if not self.__catEvt.wait(10):
+            if not self.__catEvt.wait(EVNT_TIMEOUT*2):
                 print('Timeout waiting for radio to respond to mode change!')
                 return False
             self.__catEvt.clear()
             self.__cat.do_command(CAT_FREQ_SET, dialFrequency)
-            #if not self.__catEvt.wait(EVNT_TIMEOUT):
-            if not self.__catEvt.wait(10):
+            if not self.__catEvt.wait(EVNT_TIMEOUT*2):
                 print('Timeout waiting for radio to respond to frequency change!')
                 return False
             self.__catEvt.clear()
@@ -643,19 +646,20 @@ class Automate:
         timeout = timeout + 120
         cycleCount = cycles
         while True:
-            if not self.__cycleEvt.wait(EVNT_TIMEOUT):
+            if self.__cycleEvt.wait(EVNT_TIMEOUT):
+                self.__cycleEvt.clear()
+                cycleCount -= 1
+                if cycleCount <= 0:
+                    # All done
+                    break
+            else:
                 timeout -= EVNT_TIMEOUT
                 if timeout <= 0:
                     # Timeout waiting for the cycle count
                     print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycleCount))
                     return False
                 else:
-                    continue
-            self.__cycleEvt.clear()
-            cycleCount -= 1
-            if cycleCount <= 0:
-                # All done
-                break
+                    continue           
         return True
     
     def __doIdle(self, state):
