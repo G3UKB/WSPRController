@@ -1084,8 +1084,6 @@ def update():
                 evtsock.sendto('cycle'.encode('UTF-8'), (extAddr[0], EVT_PORT))
         lastState = currentState
         
-        print(advanced.encal.get())
-        
         # End - Bob Cowdery (G3UKB)
         # ===============================================================================
         
