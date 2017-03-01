@@ -51,7 +51,7 @@ S_IDLE = 'sidle'
 S_CONTINUE = 'scontinue'
 
 # Power section
-S_POWER
+S_POWER = 'spower'
 
 # Command section
 S_COMMANDS = 'scommands'
