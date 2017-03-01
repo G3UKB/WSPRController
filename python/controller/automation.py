@@ -122,6 +122,8 @@ class Automate:
         self.__logger = logging.getLogger('auto')
         self.__logger.setLevel(logging.INFO)
         format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)-5s - %(message)s")
+        if not os.path.exists(os.path.join('..', 'logs')):
+            os.mkdir(os.path.join('..', 'logs'))
         handler = logging.handlers.RotatingFileHandler(os.path.join('..', 'logs', 'auto.log'), maxBytes=100000, backupCount=5)
         handler.setLevel(logging.INFO)
         handler.setFormatter(format)
