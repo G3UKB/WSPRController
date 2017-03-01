@@ -29,6 +29,7 @@ from defs import *
 # We need to pull in antennaControl and cat from the Common project
 sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 import antcontrol
+import loopcontrol
 import cat
 
 """
@@ -90,14 +91,23 @@ class Automate:
         self.__cycleEvt = threading.Event()
         self.__catEvt = threading.Event()
         self.__relayEvt = threading.Event()
+        self.__loopEvt = threading.Event()
         
         # Instance vars
         self.__waitingBandNo = None
         self.__catRunning = False
         
         # Create the antenna controller
-        self.__antControl = antcontrol.AntControl(ARDUINO_ADDR, RELAY_DEFAULT_STATE, self.__antControlCallback)
-    
+        self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
+        
+        # Create the loop controller
+        self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
+        # Allow full 180 for the moment
+        self.__loopControl.setLowSetpoint(0)
+        self.__loopControl.setHighSetpoint(180)
+        # Low to medium speed
+        self.__loopControl.speed(MOTOR_SPEED)
+        
         # Create the CAT controller
         self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
         if self.__cat.start_thrd():
@@ -110,6 +120,7 @@ class Automate:
         self.__eventThrd.terminate()
         self.__eventThrd.join()
         self.__cat.terminate()
+        self.__loopControl.terminate()
     
     # =================================================================================
     # Main processing     
@@ -381,6 +392,44 @@ class Automate:
         
         if 'success' in msg:
             self.__relayEvt.set()
+    
+    def __loopControlCallback(self, msg):
+        """
+        Callbacks from loop control
+        
+        Arguments:
+            msg    --  msg to report
+        
+        """
+        
+        if 'success' in msg:
+            self.__relayEvt.set()
+            
+        try:
+            # This set comes from command completions via magcontrol
+            if 'success' in message:
+                # Completed, so reset
+                self.__loopEvt.set()
+            elif 'failure' in message:
+                # Error, so reset
+                _, reason = message.split(':')
+                print('Loop Control failed [%s]' % (reason))
+            elif 'offline' in message:
+                print('Loop Controller is offline!')
+        except Exception as e:
+            print ('Exception getting loop response! [%s]', str(e))
+     
+    def __loopEvntCallback(self, msg):
+        """
+        Callbacks from loop control
+        
+        Arguments:
+            msg    --  msg to report
+        
+        """
+        
+        # Ignore for now
+        pass
         
     def __catCallback(self, msg):
         """
@@ -462,6 +511,7 @@ class Automate:
             
         """
         
+        # First main an tenna switching
         if band == B_2: table = ANTENNA_TO_VU_MATRIX
         else: table = ANTENNA_TO_HF_MATRIX
         
@@ -473,6 +523,33 @@ class Automate:
                     print('Timeout waiting for antenna changeover to respond to relay change!')
                     return False
                 self.__relayEvt.clear()
+                
+        # Loop control
+        if antenna == A_LOOP_160 or antenna == A_LOOP_80:
+            # Switch the relays to the 160 position
+            matrix = ANTENNA_TO_LOOP_MATRIX[antenna]
+            for relay, state in matrix.items():
+                if state == RELAY_OFF: state = 0
+                else: state = 1
+                self.__loopControl.setRelay((relay, state))
+                if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                    print('Timeout waiting for loop changeover to respond to relay change!')
+                    return False
+            # Set the motor and position parameters
+            self.__loopControl.setCapMaxSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][SETPOINTS][0])
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for loop changeover to respond to cap max change!')
+                return False
+            self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][SETPOINTS][1])
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for loop changeover to respond to cap min change!')
+                return False
+            # Set the position for 160m or 80m WSPR dial frequency
+            self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][POSITION])
+            if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
+                print('Timeout waiting for loop changeover to respond to position change!')
+                return False
+        
         return True
     
     def __doSpot(self, spot):
