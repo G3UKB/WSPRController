@@ -21,12 +21,16 @@
 #     bob@bobcowdery.plus.com
 #
 
+# System imports
 import os, sys, socket, traceback
 import threading
 from time import sleep
+import logging
+import logging.handlers
 
+# Application imports
 from defs import *
-# We need to pull in antennaControl and cat from the Common project
+# We need to pull in antennacontrol, loopcontrol and cat from the Common project
 sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 import antcontrol
 import loopcontrol
@@ -112,7 +116,18 @@ class Automate:
         self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
         if self.__cat.start_thrd():
             self.__catRunning = True
-        self.__cat.set_callback(self.__catCallback)    
+        self.__cat.set_callback(self.__catCallback)
+        
+        # Set up logging
+        self.__logger = logging.getLogger('auto')
+        self.__logger.setLevel(logging.INFO)
+        format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)-5s - %(message)s")
+        handler = logging.handlers.RotatingFileHandler(os.path.join('..', 'logs', 'auto.log'), maxBytes=100000, backupCount=5)
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(format)
+        self.__logger.addHandler(handler)
+        
+        self.__logger.log (logging.INFO, 'Session starting...')
         
     def terminate(self):
         """ Terminate and exit """
@@ -320,6 +335,8 @@ class Automate:
                             runCycle = True
                     if not runCycle: continue
                     
+                    # Run starting
+                    self.__logger.log (logging.INFO, 'Running -- StartHr: %d, StopHr: %d, Band: %s, TX: %d, Power: %f, Antenna: %s, Cycles: %d, Spot: %d, Radio: %d' % (startHour, stopHour, band, tx, power, antenna, cycles, spot, radio))
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue
@@ -345,6 +362,7 @@ class Automate:
                     if not self.__doCycles(cycles, tx):
                         continue
                     sleep(0.1)
+                    self.__logger.log (logging.INFO, '--Run complete--')
                     #print('Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
