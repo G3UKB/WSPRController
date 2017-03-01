@@ -25,6 +25,7 @@
 import os, sys, socket, traceback
 import threading
 from time import sleep
+import datetime
 import logging
 import logging.handlers
 
@@ -220,7 +221,7 @@ class Automate:
             for line in lines:
                 line = line.strip('\n\r')
                 n += 1
-                if n==0 or n==1: continue
+                if n==0 or n==1 or n==2: continue
                 self.__script[S_COMMANDS].append([])
                 toks = line.split(',')
                 if len(toks) != 9:
@@ -232,11 +233,11 @@ class Automate:
                 if int(toks[C_START]) < 0 or int(toks[C_START]) > 23 or int(toks[C_STOP]) < 0 or int(toks[C_STOP]) > 23:
                     print('Invalid timespan %s, %s at line %d' % (toks[C_START], toks[C_STOP], n))
                     return False, None
-                self.__script[S_COMMANDS][n-2].append(int(toks[C_START]))
-                self.__script[S_COMMANDS][n-2].append(int(toks[C_STOP]))
+                self.__script[S_COMMANDS][n-3].append(int(toks[C_START]))
+                self.__script[S_COMMANDS][n-3].append(int(toks[C_STOP]))
                 # Process BAND
                 if toks[C_BAND] in BAND_TO_INTERNAL:
-                    self.__script[S_COMMANDS][n-2].append(BAND_TO_INTERNAL[toks[C_BAND]])
+                    self.__script[S_COMMANDS][n-3].append(BAND_TO_INTERNAL[toks[C_BAND]])
                 else:
                     print('Invalid band %s at line %d' % (toks[C_BAND], n))
                     return False, None
@@ -246,26 +247,26 @@ class Automate:
                 else:
                     print('Invalid TX %s at line %d' % (toks[C_TX], n))
                     return False, None
-                self.__script[S_COMMANDS][n-2].append(tx)
+                self.__script[S_COMMANDS][n-3].append(tx)
                 # Process power
-                if toks[C_PWR] >= 0.001 and toks[C_PWR] <= 5.0:
-                    if toks[C_PWR] > self.__script[S_POWER]:
+                if float(toks[C_PWR]) >= 0.001 and float(toks[C_PWR]) <= 5.0:
+                    if float(toks[C_PWR]) > self.__script[S_POWER]:
                         print('Power level in line %d is greater than the available TX power!' % (n))
                         return False, None
-                    self.__script[S_COMMANDS][n-2].append(toks[C_PWR])
+                    self.__script[S_COMMANDS][n-3].append(float(toks[C_PWR]))
                 else:
                     print('Power must be between 0.001 and 5.0 watts')
                     return False, None
                 # Process ANTENNA
                 if toks[C_ANTENNA] in ANTENNA_TO_INTERNAL:
-                    self.__script[S_COMMANDS][n-2].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
+                    self.__script[S_COMMANDS][n-3].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
                 else:
                     print('Invalid antenna name %s at line %d' % (toks[C_ANTENNA], n))
                     return False, None
                 # Process CYCLES
                 try:
                     cycles = int(toks[C_CYCLES])
-                    self.__script[S_COMMANDS][n-2].append(cycles)
+                    self.__script[S_COMMANDS][n-3].append(cycles)
                 except Exception as e:
                     print('Invalid cycles number %s at line %d' % (toks[C_CYCLES], n))
                     return False, None
@@ -275,14 +276,14 @@ class Automate:
                 else:
                     print('Invalid SPOT %s at line %d' % (toks[C_SPOT], n))
                     return False, None
-                self.__script[S_COMMANDS][n-2].append(spot)
+                self.__script[S_COMMANDS][n-3].append(spot)
                 # Process RADIO
                 if toks[C_RADIO].lower() == 'internal': radio = R_INTERNAL
                 elif toks[C_RADIO].lower() == 'external': radio = R_EXTERNAL
                 else:
                     print('Invalid RADIO %s at line %d' % (toks[C_RADIO], n))
                     return False, None
-                self.__script[S_COMMANDS][n-2].append(radio)
+                self.__script[S_COMMANDS][n-3].append(radio)
         except Exception as e:
             print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
             return False, None
@@ -315,16 +316,16 @@ class Automate:
                     sleep(3)
                     # Unpack
                     startHour, stopHour, band, tx, power, antenna, cycles, spot, radio = instruction
-                    print(startHour, stopHour, band, tx, power, antenna, cycles, spot, radio, ' ...')
+                    print('Processing: ', startHour, stopHour, band, tx, power, antenna, cycles, spot, radio, ' ...')
                     # Check if time to run this cycle
                     runCycle = False
-                    currentHour = datetime.time().hour
+                    currentHour = datetime.datetime.now().hour
                     if (startHour == 0 and stopHour == 0):
                         # This means all day
                         runCycle = True
-                    elif endHour < startHour:
+                    elif stopHour < startHour:
                         # Crossing midnight
-                        if currentHour <= endHour:
+                        if currentHour <= stopHour:
                             # Past midnight
                             runCycle = True
                         else:
@@ -333,25 +334,25 @@ class Automate:
                                 runCycle = True
                     else:
                         # Normal progression
-                        if startHour <= currentHour and endHour >= currentHour:
+                        if startHour <= currentHour and stopHour >= currentHour:
                             runCycle = True
                     if not runCycle: continue
                     
                     # Run starting
-                    self.__logger.log (logging.INFO, 'Running -- StartHr: %d, StopHr: %d, Band: %s, TX: %d, Power: %f, Antenna: %s, Cycles: %d, Spot: %d, Radio: %d' % (startHour, stopHour, band, tx, power, antenna, cycles, spot, radio))
+                    self.__logger.log (logging.INFO, 'Running -- StartHr: %s, StopHr: %s, Band: %s, TX: %s, Power: %s, Antenna: %s, Cycles: %s, Spot: %s, Radio: %s' % (startHour, stopHour, band, tx, power, antenna, cycles, spot, radio))
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         continue
                     sleep(0.1)
-                    #print('Band')
+                    print('Band')
                     if not self.__doTx(tx, power):
                         continue
                     sleep(0.1)
-                    #print('TX')
+                    print('TX')
                     if not self.__doAntenna(antenna, band):
                         continue
                     sleep(0.1)
-                    #print('Antenna')
+                    print('Antenna')
                     if not self.__doSpot(spot):
                         continue
                     sleep(0.1)
@@ -359,13 +360,13 @@ class Automate:
                     if not self.__doRadio(radio, band):
                         continue
                     sleep(0.1)
-                    #print('Radio')
+                    print('Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles, tx):
                         continue
                     sleep(0.1)
                     self.__logger.log (logging.INFO, '--Run complete--')
-                    #print('Cycles')
+                    print('Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
@@ -422,19 +423,16 @@ class Automate:
         
         """
         
-        if 'success' in msg:
-            self.__relayEvt.set()
-            
         try:
             # This set comes from command completions via magcontrol
-            if 'success' in message:
+            if 'success' in msg:
                 # Completed, so reset
                 self.__loopEvt.set()
-            elif 'failure' in message:
+            elif 'failure' in msg:
                 # Error, so reset
-                _, reason = message.split(':')
+                _, reason = msg.split(':')
                 print('Loop Control failed [%s]' % (reason))
-            elif 'offline' in message:
+            elif 'offline' in msg:
                 print('Loop Controller is offline!')
         except Exception as e:
             print ('Exception getting loop response! [%s]', str(e))

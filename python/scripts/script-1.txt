@@ -1,8 +1,8 @@
 RUN:ONCE
 STOP:IDLE
-POWER:5
-0,0,80,False,1,80m-10m-EFD,1,False,Internal
-0,24,40,False,1,80m-10m-EFD,1,False,Internal
-18,24,20,False,1,80m-10m-EFD,1,False,Internal
-4,8,6,False,5,6-4-2m-dipole,1,False,Internal
-8,18,2,False,5,6-4-2m-dipole,1,False,Internal
+POWER:5.0
+0,0,80,False,1.0,80m-10m-EFD,1,False,Internal
+0,0,40,False,1.0,80m-10m-EFD,1,False,Internal
+18,23,20,False,1.0,80m-10m-EFD,1,False,Internal
+4,8,6,False,5.0,6-4-2m-dipole,1,False,Internal
+8,18,2,False,5.0,6-4-2m-dipole,1,False,Internal

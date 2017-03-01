@@ -57,7 +57,7 @@ S_POWER = 'spower'
 S_COMMANDS = 'scommands'
 # Offsets into command structure
 C_START = 0
-C_END = 1
+C_STOP = 1
 C_BAND = 2
 C_TX = 3
 C_PWR = 4
