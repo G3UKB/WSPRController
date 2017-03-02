@@ -5,6 +5,7 @@ echo "Starting WSPR system..."
 # Start WSPR
 cd /home/pi/wspr
 python3 wspr.py&
+sleep(5)
 
 # Start the automation controller
 cd /home/pi/Projects/WSPRController/trunk/python/controller

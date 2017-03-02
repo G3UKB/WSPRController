@@ -130,7 +130,7 @@ class Automate:
         handler.setFormatter(format)
         self.__logger.addHandler(handler)
         
-        self.__logger.log (logging.INFO, 'Session starting...')
+        self.__logger.log (logging.INFO, '\n\n\n\nSession starting...')
         
     def terminate(self):
         """ Terminate and exit """
