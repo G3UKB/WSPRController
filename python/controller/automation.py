@@ -652,7 +652,7 @@ class Automate:
         # Calculate the total timeout for the number of cycles
         # Add extra as we could be idle waiting to start
         txtime = 0
-        cycles = int(cyles)
+        cycles = int(cycles)
         if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
         timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
         # Add extra 2m as we could be idle waiting to start
