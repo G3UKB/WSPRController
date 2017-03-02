@@ -396,9 +396,10 @@ class Automate:
         
         print('__evntCallback ', evnt)
         if 'band' in evnt:
-            if self.__waitingBandNo != None:            
+            if self.__waitingBandNo != None:
+                print('Waiting ', self.__waitingBandNo)
                 _, bandNo = evnt.split(':')
-                if bandNo == self.__waitingBandNo:
+                if int(bandNo) == self.__waitingBandNo:
                     self.__bandEvt.set()
                     print('Set evnt')
         elif 'cycle' in evnt:
