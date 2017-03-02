@@ -1075,8 +1075,8 @@ def update():
             allowSwitch = True
             # Try to adjust the level to around 0dB as different bands will have different noise levels
             iterations = 5
-            ndb=int(w.acom1.xdb1-41.0+ndgain.get())
             while iterations > 0:
+                ndb=int(w.acom1.xdb1-41.0+ndgain.get())
                 if ndb < LOW_DB or ndb > HIGH_DB:
                     # Not within a good range
                     if ndb < 0:
