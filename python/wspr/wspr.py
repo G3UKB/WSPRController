@@ -1001,6 +1001,8 @@ def update():
         # ===============================================================================
         # Added - Bob Cowdery (G3UKB)
         
+        LOW_DB = -5
+        HIGH_DB = 5
         # This code allows some external control to be exercised over a UDP socklet
         try:
             data, extAddr = extsock.recvfrom(100)
