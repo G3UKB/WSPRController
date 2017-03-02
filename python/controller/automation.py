@@ -343,36 +343,42 @@ class Automate:
                     # This will only return when the band change completes
                     if not self.__doBand(band):
                         self.__doReset()
+                        print('Band failed')
                         continue
                     sleep(0.1)
-                    print('Band')
+                    print('Done Band')
                     if not self.__doTx(tx, power):
                         self.__doReset()
+                        print('TX failed')
                         continue
                     sleep(0.1)
-                    print('TX')
+                    print('Done TX')
                     if not self.__doAntenna(antenna, band):
                         self.__doReset()
+                        print('Antenna failed')
                         continue
                     sleep(0.1)
-                    print('Antenna')
+                    print('Done Antenna')
                     if not self.__doSpot(spot):
                         self.__doReset()
+                        print('Spot failed')
                         continue
                     sleep(0.1)
-                    #print('Spot')
+                    print('Done Spot')
                     if not self.__doRadio(radio, band):
                         self.__doReset()
+                        print('Radio failed')
                         continue
                     sleep(0.1)
-                    print('Radio')
+                    print('Done Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles, tx):
                         self.__doReset()
+                        print('Cycle failed')
                         continue
                     sleep(0.1)
                     self.__logger.log (logging.INFO, '--Run complete--')
-                    print('Cycles')
+                    print('Done Cycles')
                 if iterationCount > 1:
                     iterationCount -= 1
                 elif iterationCount != -1:
