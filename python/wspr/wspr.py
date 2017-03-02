@@ -1067,27 +1067,27 @@ def update():
                 # Let client know we have now switched
                 evtsock.sendto(('band:%d' % lastBndCmd).encode('UTF-8'), (extAddr[0], EVT_PORT))
                 lastBndCmd = -1
-                # Try to adjust the level to around 0dB as different bands will have different noise levels
-                iterations = 5
-                ndb=int(w.acom1.xdb1-41.0+ndgain.get())
-                while iterations > 0:
-                    if ndb < LOW_DB or ndb > HIGH_DB:
-                        # Not within a good range
-                        if ndb < 0:
-                            # Increase gain
-                           ndgain.set(ndgain.get() + abs(ndb))
-                        else:
-                            # Decrease gain
-                           ndgain.set(ndgain.get() - ndb)
-                        iterations -= 1
-                    else:
-                        break
     
-        # Check for events due
+        # Tail end processing and check for events due
         if receiving:
             currentState = S_RX
             # Once we see an RX cycle we can allow a band switch on next IDLE
             allowSwitch = True
+            # Try to adjust the level to around 0dB as different bands will have different noise levels
+            iterations = 5
+            ndb=int(w.acom1.xdb1-41.0+ndgain.get())
+            while iterations > 0:
+                if ndb < LOW_DB or ndb > HIGH_DB:
+                    # Not within a good range
+                    if ndb < 0:
+                        # Increase gain
+                       ndgain.set(ndgain.get() + abs(ndb))
+                    else:
+                        # Decrease gain
+                       ndgain.set(ndgain.get() - ndb)
+                    iterations -= 1
+                else:
+                    break
         elif transmitting: currentState = S_TX
         else: currentState = S_IDLE
         if lastState != currentState:
