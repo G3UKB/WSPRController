@@ -342,27 +342,33 @@ class Automate:
                     self.__logger.log (logging.INFO, 'Running -- StartHr: %s, StopHr: %s, Band: %s, TX: %s, Power: %s, Antenna: %s, Cycles: %s, Spot: %s, Radio: %s' % (startHour, stopHour, band, tx, power, antenna, cycles, spot, radio))
                     # This will only return when the band change completes
                     if not self.__doBand(band):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     print('Band')
                     if not self.__doTx(tx, power):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     print('TX')
                     if not self.__doAntenna(antenna, band):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     print('Antenna')
                     if not self.__doSpot(spot):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     #print('Spot')
                     if not self.__doRadio(radio, band):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     print('Radio')
                     # This will only return when the cycles are complete
                     if not self.__doCycles(cycles, tx):
+                        self.__doReset()
                         continue
                     sleep(0.1)
                     self.__logger.log (logging.INFO, '--Run complete--')
@@ -677,6 +683,18 @@ class Automate:
         self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
         return True
     
+    def __doReset(self):
+        """
+        Instruct WSPR to reset.
+        
+        Arguments:
+            
+        """
+        
+        self.__cmdSock.sendto('reset'.encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
+    
+    # =======================================================================================
     # Helpers
     
     def __powertodbm(self, power):
@@ -740,7 +758,6 @@ class EventThrd (threading.Thread):
             except socket.timeout:
                 continue
             asciidata = data.decode(encoding='UTF-8')
-            print('Got: ', data, addr)
             self.__callback(asciidata)
 
        

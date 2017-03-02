@@ -221,7 +221,8 @@ extAddr = None  # Address of external caller
 S_IDLE = 0
 S_RX = 1
 S_TX = 2
-lastState = S_IDLE    # Remember last state
+lastState = S_IDLE  # Remember last state
+allowSwitch = True  # Allow band switch
 
 # End - Bob Cowdery (G3UKB)
 # ===============================================================================
@@ -848,7 +849,7 @@ def update():
         hopping0,ntune0,startup,nred
 
     # RAC
-    global lastBndCmd, extAddr, lastState
+    global lastBndCmd, extAddr, lastState, allowSwitch
     # RAC
     
     tsec=time.time()
@@ -1013,6 +1014,7 @@ def update():
             #   'power:n    where n is the dBm reduction
             #   'idle:n     where n=0 (set IDLE), n=1 (set RUN)
             #   'upload:n'  where n=0 (don't upload spots), n=1 (upload spots)
+            #   'reset'     Something went wrong so reset to a start state
             if 'band' in asciidata:
                 _, asciiband = asciidata.split(':')
                 ibandno = int(asciiband)
@@ -1046,16 +1048,21 @@ def update():
                     upload.set(0)
                 else:
                     upload.set(1)
+            elif 'reset' in asciidata:
+                lastBndCmd = -1
+                allowSwitch = True
+                
         except socket.timeout:
             pass
         except Exception as e:
             print('Exception processing external command [%s][%s]' % (asciidata, str(e)))
 
         # Process commands that must be executed while IDLE
-        if not receiving and not transmitting:
+        if not receiving and not transmitting and allowSwitch:
             # Idle
             if lastBndCmd != -1:
                 # Switch band
+                allowSwitch = False
                 iband.set(lastBndCmd)
                 # Let client know we have now switched
                 evtsock.sendto(('band:%d' % lastBndCmd).encode('UTF-8'), (extAddr[0], EVT_PORT))
@@ -1077,7 +1084,10 @@ def update():
                         break
     
         # Check for events due
-        if receiving: currentState = S_RX
+        if receiving:
+            currentState = S_RX
+            # Once we see an RX cycle we can allow a band switch on next IDLE
+            allowSwitch = True
         elif transmitting: currentState = S_TX
         else: currentState = S_IDLE
         if lastState != currentState:
