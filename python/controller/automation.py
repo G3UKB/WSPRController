@@ -394,11 +394,13 @@ class Automate:
         
         """
         
+        print('__evntCallback ', evnt)
         if 'band' in evnt:
             if self.__waitingBandNo != None:            
                 _, bandNo = evnt.split(':')
                 if bandNo == self.__waitingBandNo:
                     self.__bandEvt.set()
+                    print('Set evnt')
         elif 'cycle' in evnt:
             self.__cycleEvt.set()
     
@@ -486,9 +488,11 @@ class Automate:
         r = False
         while True:
             if self.__bandEvt.wait(EVNT_TIMEOUT):
+                print('Got event in band')
                 r = True
                 break
             else:
+                print('Timeout in band')
                 timeout -= EVNT_TIMEOUT
                 if timeout <= 0:
                     # Timeout waiting for the band switch
@@ -739,6 +743,7 @@ class EventThrd (threading.Thread):
             except socket.timeout:
                 continue
             asciidata = data.decode(encoding='UTF-8')
+            print('Got: ', data, addr)
             self.__callback(asciidata)
 
        
