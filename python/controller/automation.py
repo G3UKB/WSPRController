@@ -394,14 +394,11 @@ class Automate:
         
         """
         
-        print('__evntCallback ', evnt)
         if 'band' in evnt:
             if self.__waitingBandNo != None:
-                print('Waiting ', self.__waitingBandNo)
                 _, bandNo = evnt.split(':')
                 if int(bandNo) == self.__waitingBandNo:
                     self.__bandEvt.set()
-                    print('Set evnt')
         elif 'cycle' in evnt:
             self.__cycleEvt.set()
     
@@ -489,11 +486,9 @@ class Automate:
         r = False
         while True:
             if self.__bandEvt.wait(EVNT_TIMEOUT):
-                print('Got event in band')
                 r = True
                 break
             else:
-                print('Timeout in band')
                 timeout -= EVNT_TIMEOUT
                 if timeout <= 0:
                     # Timeout waiting for the band switch
@@ -645,6 +640,7 @@ class Automate:
         # Calculate the total timeout for the number of cycles
         # Add extra as we could be idle waiting to start
         txtime = 0
+        cycles = int(cyles)
         if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
         timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
         # Add extra 2m as we could be idle waiting to start
