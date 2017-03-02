@@ -53,8 +53,9 @@ class Automate:
     The script file is a csv file.
     
     The first two entries in the file are special.
-        Run: repeat n (where n > 0) | loop (until the program is terminated) | once (execute once and exit)
-        Stop: idle (on exit set WSPR to IDLE mode | continue (on exit leave WSPR running as of the last command)
+        RUN: REPEAT n (where n > 0) | LOOP (until the program is terminated) | ONCE (execute once and exit)
+        STOP: idle (on exit set WSPR to IDLE mode | continue (on exit leave WSPR running as of the last command)
+        POWER: n.n (where n.n is the required power in watts)
     Each subsequent line is a command.
         band,       # From the band enumeration
         tx,         # True == 20% TX cycle | False == 0% TX cycle
@@ -150,7 +151,7 @@ class Automate:
             {
                 S_RUN: [S_REPEAT|S_LOOP|S_ONCE, param, param, ...],
                 S_STOP: S_IDLE | S_CONTINUE,
-                S_POWER: n watts,
+                S_POWER: n.n watts,
                 S_COMMANDS: [
                     [start, end, band, tx, power, antenna, cycles, spot, radio],
                     [ ... ],
