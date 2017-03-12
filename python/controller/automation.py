@@ -666,14 +666,14 @@ class Automate:
         cycles = int(cycles)
         if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
         timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
-        # Add extra 3m as we could be idle waiting to start
-        timeout = timeout + 180
+        # Give a generous amount as we have waiting periods to account for
+        timeout = timeout * 2
         cycleCount = cycles
         print('Waiting for %d cycles with timeout %ds' % (cycleCount, timeout))
         while True:
             if self.__cycleEvt.wait(EVNT_TIMEOUT):
                 self.__cycleEvt.clear()
-                print('Cycle %d complete at timeout %d' % (cycles - cycleCount + 1, timeout) )
+                print('Cycle %d complete at timeout %ds' % (cycles - cycleCount + 1, timeout) )
                 cycleCount -= 1
                 if cycleCount <= 0:
                     # All done
