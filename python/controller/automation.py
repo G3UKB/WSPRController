@@ -55,10 +55,11 @@ class Automate:
     The first two entries in the file are special.
         RUN: REPEAT n (where n > 0) | LOOP (until the program is terminated) | ONCE (execute once and exit)
         STOP: idle (on exit set WSPR to IDLE mode | continue (on exit leave WSPR running as of the last command)
-        POWER: n.n (where n.n is the required power in watts)
+        POWER: n.n (where n.n is the TX power in watts)
     Each subsequent line is a command.
         band,       # From the band enumeration
         tx,         # True == 20% TX cycle | False == 0% TX cycle
+        power       # Actual output power required in watts
         antenna,    # From the antenna enumeration (what this means is implementation dependent)
         cycles,     # The number of complete RX cycles to perform before moving to the next command
         spot,       # True == upload spots, False == do not upload spots
@@ -579,6 +580,14 @@ class Automate:
             self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][SETPOINTS][1])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 print('Timeout waiting for loop changeover to respond to cap min change!')
+                return False
+            self.__loopControl.setLowSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][BAND][0])
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for loop changeover to respond to low freq change!')
+                return False
+            self.__loopControl.setHighSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][BAND][0])
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                print('Timeout waiting for loop changeover to respond to high freq change!')
                 return False
             # Set the position for 160m or 80m WSPR dial frequency
             self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][POSITION])
