@@ -574,24 +574,24 @@ class Automate:
                     print('Timeout waiting for loop changeover to respond to relay change!')
                     return False
             # Set the motor and position parameters
-            self.__loopControl.setCapMaxSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][SETPOINTS][0])
+            self.__loopControl.setCapMaxSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 print('Timeout waiting for loop changeover to respond to cap max change!')
                 return False
-            self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][SETPOINTS][1])
+            self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][1])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 print('Timeout waiting for loop changeover to respond to cap min change!')
                 return False
-            self.__loopControl.setLowSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][BAND][0])
+            self.__loopControl.setLowSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 print('Timeout waiting for loop changeover to respond to low freq change!')
                 return False
-            self.__loopControl.setHighSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][BAND][0])
+            self.__loopControl.setHighSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 print('Timeout waiting for loop changeover to respond to high freq change!')
                 return False
             # Set the position for 160m or 80m WSPR dial frequency
-            self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][POSITION])
+            self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][L_POSITION])
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 print('Timeout waiting for loop changeover to respond to position change!')
                 return False
