@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# auto_RPi.py
+# wsprauto.py
 # 
 # Copyright (C) 2017 by G3UKB Bob Cowdery
 # This program is free software; you can redistribute it and/or modify
@@ -41,9 +41,62 @@ import cat
 """
 
 Automate WSPR and auxiliary equipment to control rig and antennas.
-The programs reads from a script file with instructions to receive
+This programs reads from a script file with instructions to receive
 and transmit on various bands for various cycle times with variable
 parameters.
+
+The program will run on Windows or Linux, including the RPi but is
+targetted at the RPi as a complete WSPR station when using 3, 4 below.
+
+Currently this program supports the following hardware:
+    1. Icom tranceivers RX/TX (specifically the 7100) via CAT.
+    2. Yausu tranceivers RX/TX (specifically the FT-857D) via CAT.
+    3. FunCubeDonglePro+ via direct USB HID commands. Intended
+    for RPi3 host but may be used on any computer. When used with
+    RPi requires firmware upgrade to drop sample rate to 48Kb
+    as the RPi cannot cope with the default 192Kb.
+    4. RPi3 bareback TX via software.
+    
+Currently this program supports the following software:
+    1. WSPR 2.1 (https://physics.princeton.edu/pulsar/k1jt/wspr.html)
+    with stereo audio or I/Q inputs. The program must be configured
+    manually for the required operation. It can be used
+    for RX only in conjunction with (4 above + 2 below) or full RX/TX
+    in conjunction with (1, 2 above). Note that WSPR has been modified
+    to accept external commands via UDP.
+    2. JamesP6000/WsprryPi (https://github.com/JamesP6000/WsprryPi)bareback
+    for direct RPi 3 TX excitation.
+    3. csete/fcdctl command line program (https://github.com/csete/fcdctl)
+    for sending HID commands to FunCubeDonglePro+ for setting frequency etc.
+    
+Bespoke support:
+As well as the hardware and software support above which is commercial or
+open source the program supports specific hardware developed by the author.
+Although this is bespoke hardware the fuctions are generic and may be required
+in some form for other implementations. The interface to the controlling modules
+has been made as generic as possible such that the implementation modules can
+be more easily replaced as required for different implementations.
+    1. LPF's and LPF switching. When using a TX capability that does not have
+    inbuilt LPF's such as the barefoor RPi these filters must be supplied externally.
+    The author uses a SotaBeams LPF kit for 160/80/40
+    (http://www.sotabeams.co.uk/low-pass-filter-kit/) as these are the main bands
+    of interest for TX. This PCB has no on-board switching so this is provided
+    using the RPi GPIO and an 8 relay switching module.
+    2. Main antenna switching. Whether using commercial tranceivers or the self
+    contained RPi station it is probably necessary to route different antenna to
+    the various inputs and outputs of the system. In the case of the RPi station for
+    example it is possible to TX and RX on different bands concurrently and then switch
+    antennas to change the TX/RX bands. In addition it may also be required to switch
+    antennas to the main station. The author has a switch system that supports
+    comprehensive routing in a many to many configuration.
+    3. Antenna tuning. This may be an area of difficulty when using antennas that require
+    tuning on different bands. Auto-tuners will not work at very low power (RPi barefoot
+    outputs 10mW). Thus if tuning is required and there is insufficient power for an
+    auto-tuner the tuner must support set-points for different frequencies. The autor
+    currently uses an End Fed Dipole which will support 40/20/15/10 without tuning and
+    160/80 loops that require tuning but are supported by a loop tuning system that
+    can be configured with frequency setpoints.
+    
 
 """
 
@@ -51,7 +104,40 @@ class Automate:
     
     """
     
-    The script file is a csv file.
+    The script file is in csv format.
+    
+    Each line is a command. The commands are at a fairly fine granularity such that most
+    of the logic to do what and when is in the script file rather than have a simple script
+    file with most of the logic hard coded. This scheme makes the script file longer and
+    harder to write but makes changing the what and when, adding and removing features much
+    easier to do.
+    
+    Command lines are of this form:
+        Major command, [Params | Minor command] [param, param, ...]
+        
+    Command types:
+        Control commands:
+        FOR         # Start a for loop execution
+        END         # End of loop
+        PAUSE       # Pause the script file
+        Hardware commands:
+        LPF         # Commands related to the LPF filters
+        ANTENNA     # Commands related to antenna switching
+        LOOP        # Commands related to the loop switching and tuning
+        RADIO       # CAT commands to external radios
+        Software commands:
+        WSPR        # Commands related to WSPR
+        WSPRRYPI    # Commands related to WsprryPi        
+        FCD         # Commands related to the FunCubeDonglePro+
+    
+    Command lines:
+        Control commands:
+        FOR, n      # Iterate to END n times. If n is -1 iterate for ever.
+        END         # Loopback to last FOR while iteration < n
+        PAUSE, n.n  # Pause execution for n.n seconds
+        Hardware commands:
+        
+        
     
     The first two entries in the file are special.
         RUN: REPEAT n (where n > 0) | LOOP (until the program is terminated) | ONCE (execute once and exit)
