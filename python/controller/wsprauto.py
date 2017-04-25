@@ -160,6 +160,7 @@ class Automate:
                     # Set the radio mode using CAT
       Software commands:
         WSPR    INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
+                RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
                 BAND, 160|80|40|...     # Set band for reporting
                 TX, on|off              # Set TX to 20% or 0%
@@ -608,6 +609,23 @@ class Automate:
         
         """
 
+        subcommand = params[0]
+        if subcommand == INVOKE:
+            pass
+        elif subcommand == RESET:
+            self.__doWSPRReset()            
+        elif subcommand == IDLE:
+            self.__doWSPRIdle()
+        elif subcommand == BAND:
+            self.__doWSPRBand()
+        elif subcommand == TX:
+            self.__doWSPRTx()
+        elif subcommand == POWER:
+            self.__doWSPRPower()
+        elif subcommand == CYCLES:
+            self.__doWSPRCycles()
+        elif subcommand == SPOT:
+            self.__doWSPRSpot()
         return DISP_CONTINUE, None
     
     def __wsprry(self, params, index):
@@ -648,7 +666,10 @@ class Automate:
     
     # =================================================================================
     # Sub-Execution functions
-    def __doBand(self, band):
+    
+    # =================================================================================
+    # WSPR
+    def __doWSPRBand(self, band):
         """
         Instruct WSPR to change band.
         Wait for the band changed event as it will only do this when IDLE
@@ -681,7 +702,7 @@ class Automate:
         self.__waitingBandNo = None
         return r
              
-    def __doTx(self, tx, power):
+    def __doWSPRTx(self, tx, power):
         """
         Instruct WSPR to set the TX feature to 0% or 20%
         
@@ -705,7 +726,88 @@ class Automate:
         # Do TX command
         self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
         return True
+       
+    def __doWSPRSpot(self, spot):
+        """
+        Instruct WSPR to set the spot feature on or off
+        
+        Arguments:
+            spot    --  True = ON, False = OFF
+            
+        """
+        
+        if spot: cmd = 1
+        else: cmd = 0
+        self.__cmdSock.sendto(('upload:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
+       
+    def __doWSPRCycles(self, cycles, tx):
+        """
+        Wait for WSPR to execute 'cycles' cycles.
+        A cycle is either an RX cycle or an RX followed by a TX cycle
+        
+        Arguments:
+            cycles    --  the number of cycles to wait for
+            tx        --  True if running TX cycles
+            
+        """
+        
+        # Cycles are 2 mins for an RX and 2 mins for a TX
+        # Calculate the total timeout for the number of cycles
+        # Add extra as we could be idle waiting to start
+        txtime = 0
+        cycles = int(cycles)
+        if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
+        timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
+        # Give a generous amount as we have waiting periods to account for
+        timeout = timeout * 2
+        cycleCount = cycles
+        print('Waiting for %d cycles with timeout %ds' % (cycleCount, timeout))
+        while True:
+            if self.__cycleEvt.wait(EVNT_TIMEOUT):
+                self.__cycleEvt.clear()
+                print('Cycle %d complete at timeout %ds' % (cycles - cycleCount + 1, timeout) )
+                cycleCount -= 1
+                if cycleCount <= 0:
+                    # All done
+                    break
+            else:
+                timeout -= EVNT_TIMEOUT
+                if timeout <= 0:
+                    # Timeout waiting for the cycle count
+                    print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycles - cycleCount + 1))
+                    return False
+                else:
+                    continue           
+        return True
     
+    def __doWSPRIdle(self, state):
+        """
+        Instruct WSPR to enter the IDLE mode.
+        
+        Arguments:
+            state    --  True == IDLE
+            
+        """
+        
+        if state: cmd = 1
+        else: cmd = 0
+        self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
+    
+    def __doWSPRReset(self):
+        """
+        Instruct WSPR to reset.
+        
+        Arguments:
+            
+        """
+        
+        self.__cmdSock.sendto('reset'.encode('utf-8'), (CMD_IP, CMD_PORT))
+        return True
+    
+    # =================================================================================
+    # Antennas
     def __doAntenna(self, antenna, band):
         """
         Instruct the antenna switching module to switch to the given antenna
@@ -766,20 +868,8 @@ class Automate:
         
         return True
     
-    def __doSpot(self, spot):
-        """
-        Instruct WSPR to set the spot feature on or off
-        
-        Arguments:
-            spot    --  True = ON, False = OFF
-            
-        """
-        
-        if spot: cmd = 1
-        else: cmd = 0
-        self.__cmdSock.sendto(('upload:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
-    
+    # =================================================================================
+    # Radios
     def __doRadio(self, radio, band):
         """
         If external then do nothing.
@@ -814,73 +904,8 @@ class Automate:
                 print('Timeout waiting for radio to respond to frequency change!')
                 return False
             self.__catEvt.clear()
-            return True                
-    
-    def __doCycles(self, cycles, tx):
-        """
-        Wait for WSPR to execute 'cycles' cycles.
-        A cycle is either an RX cycle or an RX followed by a TX cycle
+            return True
         
-        Arguments:
-            cycles    --  the number of cycles to wait for
-            tx        --  True if running TX cycles
-            
-        """
-        
-        # Cycles are 2 mins for an RX and 2 mins for a TX
-        # Calculate the total timeout for the number of cycles
-        # Add extra as we could be idle waiting to start
-        txtime = 0
-        cycles = int(cycles)
-        if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
-        timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
-        # Give a generous amount as we have waiting periods to account for
-        timeout = timeout * 2
-        cycleCount = cycles
-        print('Waiting for %d cycles with timeout %ds' % (cycleCount, timeout))
-        while True:
-            if self.__cycleEvt.wait(EVNT_TIMEOUT):
-                self.__cycleEvt.clear()
-                print('Cycle %d complete at timeout %ds' % (cycles - cycleCount + 1, timeout) )
-                cycleCount -= 1
-                if cycleCount <= 0:
-                    # All done
-                    break
-            else:
-                timeout -= EVNT_TIMEOUT
-                if timeout <= 0:
-                    # Timeout waiting for the cycle count
-                    print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycles - cycleCount + 1))
-                    return False
-                else:
-                    continue           
-        return True
-    
-    def __doIdle(self, state):
-        """
-        Instruct WSPR to enter the IDLE mode.
-        
-        Arguments:
-            state    --  True == IDLE
-            
-        """
-        
-        if state: cmd = 1
-        else: cmd = 0
-        self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
-    
-    def __doReset(self):
-        """
-        Instruct WSPR to reset.
-        
-        Arguments:
-            
-        """
-        
-        self.__cmdSock.sendto('reset'.encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
-    
     # =======================================================================================
     # Helpers
     
