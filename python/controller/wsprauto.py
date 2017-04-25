@@ -104,55 +104,79 @@ class Automate:
     
     """
     
-    The script file is in csv format.
+    The script file consists of commands and comments.
     
-    Each line is a command. The commands are at a fairly fine granularity such that most
-    of the logic to do what and when is in the script file rather than have a simple script
-    file with most of the logic hard coded. This scheme makes the script file longer and
-    harder to write but makes changing the what and when, adding and removing features much
-    easier to do.
+    The commands are at a fairly fine granularity such that most of the logic to do what and
+    when is in the script file rather than have a simple script file with most of the logic
+    hard coded. This scheme makes the script file longer and harder to write but makes it more
+    definitive and makes changing the what and when, adding and removing features much easier to do.
     
     Command lines are of this form:
-        Major command, [Params | Minor command] [param, param, ...]
+        Major command: [Params | Minor command] [param, param, ...]
+        Minor command/params are comma separated
+        
+    Comments start with # in the first column and can only extend over one line.
         
     Command types:
-        Control commands:
-        FOR         # Start a for loop execution
-        END         # End of loop
+      Control commands:
+        SEQ         # Start a sequence
+        ENDSEQ      # End of loop
+        TIME        # Start a time banded section
+        ENDTIME     # End a time banded section
         PAUSE       # Pause the script file
-        Hardware commands:
+        COMPLETE    # Script complete
+      Hardware commands:
         LPF         # Commands related to the LPF filters
         ANTENNA     # Commands related to antenna switching
         LOOP        # Commands related to the loop switching and tuning
         RADIO       # CAT commands to external radios
-        Software commands:
+      Software commands:
         WSPR        # Commands related to WSPR
         WSPRRYPI    # Commands related to WsprryPi        
         FCD         # Commands related to the FunCubeDonglePro+
     
     Command lines:
-        Control commands:
-        FOR, n      # Iterate to END n times. If n is -1 iterate for ever.
-        END         # Loopback to last FOR while iteration < n
+      Control commands:
+        SEQ, n      # Iterate to END n times. If n is -1 iterate for ever.
+        ENDSEQ      # Loopback to last SEQ while iteration < n
+        TIME, start, end
+                    # The commands banded by TIME and ENDTIME to be executed only between start, end time in hours
+                    # 24 hour clock.
+        ENDTIME     SKIP to ENDTIME if time criteria not met
         PAUSE, n.n  # Pause execution for n.n seconds
-        Hardware commands:
-        
-        
-    
-    The first two entries in the file are special.
-        RUN: REPEAT n (where n > 0) | LOOP (until the program is terminated) | ONCE (execute once and exit)
-        STOP: idle (on exit set WSPR to IDLE mode | continue (on exit leave WSPR running as of the last command)
-        POWER: n.n (where n.n is the TX power in watts)
-    Each subsequent line is a command.
-        band,       # From the band enumeration
-        tx,         # True == 20% TX cycle | False == 0% TX cycle
-        power       # Actual output power required in watts
-        antenna,    # From the antenna enumeration (what this means is implementation dependent)
-        cycles,     # The number of complete RX cycles to perform before moving to the next command
-        spot,       # True == upload spots, False == do not upload spots
-        radio       # Internal == manage the radio via CAT | External == WSPR or something else is managing the radio
-        
-    The file will execute line by line and then obey the Run/Stop entries.
+        COMPLETE    # End of script
+      Hardware commands:
+        LPF, band   # Where band is 160/80/40 etc. Mapping is involved to relay activation.
+        ANTENNA, source, dest
+                    # Sets up a route between an antenna and a destination TX or RX capability.
+                    # e.g. 160-Loop, FCDPro+. Mapping is involved to relay activation.
+        LOOP, band, extension
+                    # Switch the loop to band, and extend the actuator to % extension.
+        RADIO,  CAT, radio, com_port, baud_rate
+                    # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
+                FREQ, MHz
+                    # Set the radio frequency to MHz using CAT
+                MODE, LSB|USB|...
+                    # Set the radio mode using CAT
+      Software commands:
+        WSPR    INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
+                IDLE, on|off            # Set idle on/off, i.e stop RX/TX
+                BAND, 160|80|40|...     # Set band for reporting
+                TX, on|off              # Set TX to 20% or 0%
+                POWER, nn.nn            # Adjust power output when using external radio TX
+                CYCLES, n               # Wait for n receive cycles
+                SPOT, on|off            # Set spotting on/off.
+        WSPRRY  OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
+                CALLSIGN, callsign      # Set callsign for tx data. Must be set before START.
+                LOCATOR, locator        # Set locator for tx data. Must be set before START.
+                PWR, power              # Set Tx power in dBm for tx data. Must be set before START.
+                START, f1, f2, f3, ...  # Start WsprryPi with the given frequency sequence and settings.
+                STOP                    # Stop WsprryPI if running.
+        FCD                             # Set FCDPro+ attributes using fcdctl program
+                FREQ, MHz               # Set the FCDPro+ frequency.
+                LNA, gain               # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
+                MIXER, gain             # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
+                IF, gain                # Set the FCDPro+ IF gain, 0-59 dB.
     
     A log file is written to enable subsequent analysis of the results.
     Two versions of the file are written:
@@ -166,12 +190,11 @@ class Automate:
     
     """
         
-    def __init__(self, scriptPath, COMPort):
+    def __init__(self, scriptPath):
         
         self.__scriptPath = scriptPath
-        self.__comPort = COMPort
         
-        CAT_SETTINGS[SERIAL][0] = self.__comPort
+        #CAT_SETTINGS[SERIAL][0] = self.__comPort
         
         # Create command socket
         self.__cmdSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -192,21 +215,38 @@ class Automate:
         self.__catRunning = False
         
         # Create the antenna controller
-        self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
+        #self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
         
         # Create the loop controller
-        self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
-        # Allow full 180 for the moment
-        self.__loopControl.setLowSetpoint(0)
-        self.__loopControl.setHighSetpoint(180)
+        #self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
+        # Allow full extension for the moment
+        #self.__loopControl.setLowSetpoint(0)
+        #self.__loopControl.setHighSetpoint(100)
         # Low to medium speed
-        self.__loopControl.speed(MOTOR_SPEED)
+        #self.__loopControl.speed(MOTOR_SPEED)
         
         # Create the CAT controller
-        self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
-        if self.__cat.start_thrd():
-            self.__catRunning = True
-        self.__cat.set_callback(self.__catCallback)
+        #self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
+        #if self.__cat.start_thrd():
+        #    self.__catRunning = True
+        #self.__cat.set_callback(self.__catCallback)
+        
+        # Set up a dispatch table for major commands
+        self.__dispatch = {
+            'SEQ': self.__startseq,
+            'ENDSEQ':  self.__stopseq,
+            'TIME':  self.__starttime,
+            'ENDTIME':  self.__stoptime,
+            'PAUSE':  self.__pause,
+            'LPF':  self.__lpf,
+            'ANTENNA':  self.__antenna,
+            'LOOP':  self.__loop,
+            'RADIO':  self.__radio,
+            'WSPR':  self.__wspr,
+            'WSPRRY':  self.__wsprry,
+            'FCD':  self.__fcd,
+            'COMPLETE': self.__complete,
+        }
         
         # Set up logging
         self.__logger = logging.getLogger('auto')
@@ -226,29 +266,37 @@ class Automate:
         
         self.__eventThrd.terminate()
         self.__eventThrd.join()
-        self.__cat.terminate()
-        self.__loopControl.terminate()
+        #self.__cat.terminate()
+        #self.__loopControl.terminate()
     
     # =================================================================================
     # Main processing     
     def parseScript(self):
         
         """
-        Parse the script file into an internal structure of the following form:
+        The script file is parsed into an internal list of the following form:
         
-            {
-                S_RUN: [S_REPEAT|S_LOOP|S_ONCE, param, param, ...],
-                S_STOP: S_IDLE | S_CONTINUE,
-                S_POWER: n.n watts,
-                S_COMMANDS: [
-                    [start, end, band, tx, power, antenna, cycles, spot, radio],
-                    [ ... ],
-                    ...
-                ]
-            }
-            
+        [
+            [Major command, [Minor command|param, param, ...]],
+            [Major command, [...]],
+            ...
+        ]
+        
+        State is kept in a separate dictionary.
+        {
+            # Push down stack. If iterations nest, the new iteration is first in list.
+            # As each iteration completes it is removed and execution continues with
+            # the next iteration if any
+            SEQ: [[iterations, count, offset], [iterations, count, offset], ...],
+            # Wait for 'cycles' to complete
+            CYCLES: [cycles, cycle-count],
+            # CAT parameters
+            CAT: [radio, baud],
+            # WSPPRYPI fixed parameters
+            WSPPRY: [options, callsign, locator, power]            
+        }
         """
-        self.__script = {}
+        self.__script = []
         
         try:
             f = open(self.__scriptPath)
@@ -258,121 +306,21 @@ class Automate:
             return
         try:    
             # Process file
-            cmd, value = lines[0].split(':')
-            if cmd.lower() == 'run':
-                if 'repeat' in value.lower():
-                    cmd, value = value.split(' ')
-                    try:
-                        count = int(value)
-                    except Exception as e:
-                        print('Syntax is REPEAT n[nnn..], found %s' % (lines[0]))
-                        return False
-                    self.__script[S_RUN] = [S_REPEAT, count]
-                elif 'loop' in value.lower():
-                    self.__script[S_RUN] = [S_LOOP, None]
-                elif 'once' in value.lower():
-                    self.__script[S_RUN] = [S_ONCE, None]
-                else:
-                    print("'RUN' line must contain REPEAT, LOOP or ONCE")
-                    return False, None
-            else:
-                print("Line 1 in the script file must be 'RUN'")
-                return False, None
-            
-            cmd, value = lines[1].split(':')
-            if cmd.lower() == 'stop':
-                if 'idle' in value.lower():
-                    self.__script[S_STOP] = S_IDLE
-                elif 'continue' in value.lower():
-                    self.__script[S_STOP] = S_CONTINUE
-                else:
-                    print("'STOP' line must contain IDLE or CONTINUE")
-                    return False, None
-            else:
-                print("Line 2 in the script file must be 'STOP'")
-                return False, None
-            
-            cmd, value = lines[2].split(':')
-            if cmd.lower() == 'power':
-                try:
-                    value = float(value)
-                    self.__script[S_POWER] = value
-                except Exception:
-                    print('POWER line must have a value numerical power')
-                    return False, None
-            else:
-                print("Line 3 in the script file must be 'POWER'")
-                return False, None    
-                
-            # Process command lines
-            self.__script[S_COMMANDS] = []
-            n = -1
+            index = 0
             for line in lines:
+                if line[0] == '#':
+                    # Comment line
+                    continue
                 line = line.strip('\n\r')
-                n += 1
-                if n==0 or n==1 or n==2: continue
-                self.__script[S_COMMANDS].append([])
-                toks = line.split(',')
-                if len(toks) != 9:
-                    print('Line %d in script file contains %d tokens, expected 9 [%s]' % (n, len(toks), line))
-                    return False, None
-                # Line contains [start, end, band, tx, power, antenna, cycles, spot, radio]
-                # Translate the items into an internal representation
-                # process TIME
-                if int(toks[C_START]) < 0 or int(toks[C_START]) > 23 or int(toks[C_STOP]) < 0 or int(toks[C_STOP]) > 23:
-                    print('Invalid timespan %s, %s at line %d' % (toks[C_START], toks[C_STOP], n))
-                    return False, None
-                self.__script[S_COMMANDS][n-3].append(int(toks[C_START]))
-                self.__script[S_COMMANDS][n-3].append(int(toks[C_STOP]))
-                # Process BAND
-                if toks[C_BAND] in BAND_TO_INTERNAL:
-                    self.__script[S_COMMANDS][n-3].append(BAND_TO_INTERNAL[toks[C_BAND]])
-                else:
-                    print('Invalid band %s at line %d' % (toks[C_BAND], n))
-                    return False, None
-                # Process TX
-                if toks[C_TX].lower() == 'false': tx = False
-                elif toks[C_TX].lower() == 'true': tx = True
-                else:
-                    print('Invalid TX %s at line %d' % (toks[C_TX], n))
-                    return False, None
-                self.__script[S_COMMANDS][n-3].append(tx)
-                # Process power
-                if float(toks[C_PWR]) >= 0.001 and float(toks[C_PWR]) <= 5.0:
-                    if float(toks[C_PWR]) > self.__script[S_POWER]:
-                        print('Power level in line %d is greater than the available TX power!' % (n))
-                        return False, None
-                    self.__script[S_COMMANDS][n-3].append(float(toks[C_PWR]))
-                else:
-                    print('Power must be between 0.001 and 5.0 watts')
-                    return False, None
-                # Process ANTENNA
-                if toks[C_ANTENNA] in ANTENNA_TO_INTERNAL:
-                    self.__script[S_COMMANDS][n-3].append(ANTENNA_TO_INTERNAL[toks[C_ANTENNA]])
-                else:
-                    print('Invalid antenna name %s at line %d' % (toks[C_ANTENNA], n))
-                    return False, None
-                # Process CYCLES
-                try:
-                    cycles = int(toks[C_CYCLES])
-                    self.__script[S_COMMANDS][n-3].append(cycles)
-                except Exception as e:
-                    print('Invalid cycles number %s at line %d' % (toks[C_CYCLES], n))
-                    return False, None
-                # Process SPOT
-                if toks[C_SPOT].lower() == 'false': spot = False
-                elif toks[C_SPOT].lower() == 'true': spot = True
-                else:
-                    print('Invalid SPOT %s at line %d' % (toks[C_SPOT], n))
-                    return False, None
-                self.__script[S_COMMANDS][n-3].append(spot)
-                # Process RADIO
-                if toks[C_RADIO].lower() == 'internal': radio = R_INTERNAL
-                elif toks[C_RADIO].lower() == 'external': radio = R_EXTERNAL
-                else:
-                    print('Invalid RADIO %s at line %d' % (toks[C_RADIO], n))
-                    return False, None
-                self.__script[S_COMMANDS][n-3].append(radio)
+                cmd, remainder = line.split(':')
+                self.__script.append([])
+                self.__script[index].append(cmd)
+                self.__script[index].append([])
+                if len(remainder) > 0:
+                    toks = remainder.split(',')
+                    for tok in toks:
+                        self.__script[index][1].append(tok.strip())
+                index += 1
         except Exception as e:
             print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
             return False, None
@@ -383,100 +331,26 @@ class Automate:
         """ Execute according to the internal structure"""
         
         try:
-            # Get the iteration instruction.
-            if self.__script[S_RUN][0] == S_REPEAT:
-                iterationCount = self.__script[S_RUN][1]
-            elif self.__script[S_RUN][0] == S_LOOP:
-                iterationCount = -1
-            else:
-                iterationCount = 1
-            # Get the termination instruction.    
-            if self.__script[S_STOP] == S_IDLE:
-                idle = True
-            else:
-                idle = False
-            # Make sure we are not idle
-            self.__doIdle(False)
-            while True:
-                # Do one run through the script
-                # if we hit an error we report on the instruction and the error then skip the line
-                # and attempt to carry on.
-                for instruction in self.__script[S_COMMANDS]:
-                    sleep(3)
-                    # Unpack
-                    startHour, stopHour, band, tx, power, antenna, cycles, spot, radio = instruction
-                    print('Processing: ', startHour, stopHour, band, tx, power, antenna, cycles, spot, radio, ' ...')
-                    # Check if time to run this cycle
-                    runCycle = False
-                    currentHour = datetime.datetime.now().hour
-                    if (startHour == 0 and stopHour == 0):
-                        # This means all day
-                        runCycle = True
-                    elif stopHour < startHour:
-                        # Crossing midnight
-                        if currentHour <= stopHour:
-                            # Past midnight
-                            runCycle = True
-                        else:
-                            # Before midnight
-                            if currentHour >= startHour:
-                                runCycle = True
-                    else:
-                        # Normal progression
-                        if startHour <= currentHour and stopHour >= currentHour:
-                            runCycle = True
-                    if not runCycle: continue
-                    
-                    # Run starting
-                    self.__logger.log (logging.INFO, 'Running -- StartHr: %s, StopHr: %s, Band: %s, TX: %s, Power: %s, Antenna: %s, Cycles: %s, Spot: %s, Radio: %s' % (startHour, stopHour, band, tx, power, antenna, cycles, spot, radio))
-                    # This will only return when the band change completes
-                    if not self.__doBand(band):
-                        self.__doReset()
-                        print('Band failed')
-                        continue
-                    sleep(0.1)
-                    print('Done Band')
-                    if not self.__doTx(tx, power):
-                        self.__doReset()
-                        print('TX failed')
-                        continue
-                    sleep(0.1)
-                    print('Done TX')
-                    if not self.__doAntenna(antenna, band):
-                        self.__doReset()
-                        print('Antenna failed')
-                        continue
-                    sleep(0.1)
-                    print('Done Antenna')
-                    if not self.__doSpot(spot):
-                        self.__doReset()
-                        print('Spot failed')
-                        continue
-                    sleep(0.1)
-                    print('Done Spot')
-                    if not self.__doRadio(radio, band):
-                        self.__doReset()
-                        print('Radio failed')
-                        continue
-                    sleep(0.1)
-                    print('Done Radio')
-                    # This will only return when the cycles are complete
-                    if not self.__doCycles(cycles, tx):
-                        self.__doReset()
-                        print('Cycle failed')
-                        continue
-                    sleep(0.1)
-                    self.__logger.log (logging.INFO, '--Run complete--')
-                    print('Done Cycles')
-                if iterationCount > 1:
-                    iterationCount -= 1
-                elif iterationCount != -1:
-                    # Time to go
-                    if idle:
-                        # Requested to put WSPR into IDLE
-                        self.__doIdle(True)
-                    break                    
-        
+            # Run through the script
+            # Errors are managed in-line as recoverable or non-recoverable.
+            index = 0
+            while index < len(self.__script):
+                commandLine = self.__script[index]
+                majorCommand = commandLine[0]
+                parameters = commandLine[1]
+                result, qualifier = self.__dispatch[majorCommand](parameters, index)
+                index += 1
+                if result == DISP_COMPLETE:
+                    print('Script execution complete, terminating...')
+                    break
+                elif result == DISP_RECOVERABLE_ERROR:
+                    print ('Recoverable error [%s], skipping command and continuing' % (qualifier))
+                elif result == DISP_NONRECOVERABLE_ERROR:
+                    print ('Non-Recoverable error [%s], terminating...' % (qualifier))
+                    break
+                elif result == DISP_NEW_INDEX:
+                    # Iteration or skipping a time section
+                    index = qualifier
         except Exception as e:
             print('Error in script execution [%s][%s]' % (str(e), traceback.format_exc()))
             return False
@@ -563,9 +437,50 @@ class Automate:
             self.__catEvt.set()
         else:
             print('CAT reported: ', msg)
-        
+     
     # =================================================================================
-    # Execution functions
+    # Main-Execution functions
+    def __startseq(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __stopseq(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __starttime(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __stoptime(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __pause(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __lpf(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __antenna(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __loop(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __radio(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __wspr(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __wsprry(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __fcd(self, params, index):
+        return DISP_CONTINUE, None
+    
+    def __complete(self, params, index):
+        return DISP_COMPLETE, None
+    
+    # =================================================================================
+    # Sub-Execution functions
     def __doBand(self, band):
         """
         Instruct WSPR to change band.
@@ -877,19 +792,17 @@ def main():
         # Arguments are:
         #   arg0 program name (always)
         #   arg1    --  path to script file
-        #   arg2    --  COM port for CAT control
         #
-        if len(sys.argv) != 3:
-            print('Usage: python automation.py path-to-script-file, COM-port-for-CAT')
+        if len(sys.argv) != 2:
+            print('Usage: python automation.py path-to-script-file')
             sys.exit(0)
         path = sys.argv[1]
-        com = sys.argv[2]
         if not os.path.exists(path):
             print('Error: Invalid path to script file!')
             sys.exit(0)
             
         print('Starting automation run...')
-        app = Automate(path, com)
+        app = Automate(path)
         # Parse the file
         r, struct = app.parseScript()
         if r:

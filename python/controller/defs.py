@@ -66,6 +66,12 @@ C_CYCLES = 6
 C_SPOT = 7
 C_RADIO = 8
 
+DISP_CONTINUE = 0
+DISP_COMPLETE = 1
+DISP_RECOVERABLE_ERROR = 2
+DISP_NONRECOVERABLE_ERROR = 3
+DISP_NEW_INDEX = 4
+                
 # ===============================================================================
 # Radio definitions
 R_INTERNAL = 'rinternal'
