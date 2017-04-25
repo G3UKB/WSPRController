@@ -71,7 +71,18 @@ DISP_COMPLETE = 1
 DISP_RECOVERABLE_ERROR = 2
 DISP_NONRECOVERABLE_ERROR = 3
 DISP_NEW_INDEX = 4
-                
+
+# ===============================================================================
+# Low Pass Filters
+# Pin to relay allocation
+# Each relay pair shorts the input and output LPF jumpers
+PIN_160_1 = 13  # Rly 3
+PIN_160_2 = 21  # Rly 6
+PIN_80_1 = 6    # Rly 2
+PIN_80_2 = 20   # Rly 5
+PIN_40_1 = 5    # Rly 1
+PIN_40_2 = 26   # Rly 4
+
 # ===============================================================================
 # Radio definitions
 R_INTERNAL = 'rinternal'

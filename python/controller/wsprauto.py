@@ -231,10 +231,34 @@ class Automate:
         #    self.__catRunning = True
         #self.__cat.set_callback(self.__catCallback)
         
+        # Script sequence and current state
+        # The script file is parsed into an internal list of the following form:
+        #
+        # [
+        #   [Major command, [Minor command|param, param, ...]],
+        #   [Major command, [...]],
+        #   ...
+        # ]
+        self.__script = []
+        # State is kept in a separate dictionary.
+        # {
+        #     # Push down stack. If iterations nest, the new iteration is first in list.
+        #     # As each iteration completes it is removed and execution continues with
+        #     # the next iteration if any
+        #     SEQ: [[iterations, count, offset], [iterations, count, offset], ...],
+        #     # Wait for 'cycles' to complete
+        #     CYCLES: [cycles, cycle-count],
+        #     # CAT parameters
+        #     CAT: [radio, baud],
+        #     # WSPPRYPI fixed parameters
+        #     WSPPRY: [options, callsign, locator, power]            
+        # }
+        self.__state = {}
+        
         # Set up a dispatch table for major commands
         self.__dispatch = {
             'SEQ': self.__startseq,
-            'ENDSEQ':  self.__stopseq,
+            'ENDSEQ':  self.__endseq,
             'TIME':  self.__starttime,
             'ENDTIME':  self.__stoptime,
             'PAUSE':  self.__pause,
@@ -247,6 +271,21 @@ class Automate:
             'FCD':  self.__fcd,
             'COMPLETE': self.__complete,
         }
+        
+        # Low pass filters
+        # Set modes and deactivate all relays        
+        GPIO.setup(PIN_160_1, GPIO.OUT)
+        GPIO.setup(PIN_160_2, GPIO.OUT)
+        GPIO.setup(PIN_80_1, GPIO.OUT)
+        GPIO.setup(PIN_80_2, GPIO.OUT)
+        GPIO.setup(PIN_40_1, GPIO.OUT)
+        GPIO.setup(PIN_40_2, GPIO.OUT)
+        self.__resetLPF()
+
+        # Defs
+        LPF_160 = 'LPF-160'
+        LPF_80 = 'LPF-80'
+        LPF_40 = 'LPF-40'
         
         # Set up logging
         self.__logger = logging.getLogger('auto')
@@ -273,30 +312,7 @@ class Automate:
     # Main processing     
     def parseScript(self):
         
-        """
-        The script file is parsed into an internal list of the following form:
-        
-        [
-            [Major command, [Minor command|param, param, ...]],
-            [Major command, [...]],
-            ...
-        ]
-        
-        State is kept in a separate dictionary.
-        {
-            # Push down stack. If iterations nest, the new iteration is first in list.
-            # As each iteration completes it is removed and execution continues with
-            # the next iteration if any
-            SEQ: [[iterations, count, offset], [iterations, count, offset], ...],
-            # Wait for 'cycles' to complete
-            CYCLES: [cycles, cycle-count],
-            # CAT parameters
-            CAT: [radio, baud],
-            # WSPPRYPI fixed parameters
-            WSPPRY: [options, callsign, locator, power]            
-        }
-        """
-        self.__script = []
+        """ Parse script file into an internal structure """
         
         try:
             f = open(self.__scriptPath)
@@ -328,10 +344,10 @@ class Automate:
         return True, self.__script
     
     def executeScript(self):
-        """ Execute according to the internal structure"""
+        """ Execute the script """
         
         try:
-            # Run through the script
+            # Run until complete or we run out of commands
             # Errors are managed in-line as recoverable or non-recoverable.
             index = 0
             while index < len(self.__script):
@@ -441,42 +457,193 @@ class Automate:
     # =================================================================================
     # Main-Execution functions
     def __startseq(self, params, index):
+        """
+        Start an iteration sequence
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
+        iterations = params
+        
+        # Prepend this sequence start point into the structure
+        if SEQ in self.state:
+            self.__state[SEQ].insert(0, [iterations, iterations, index+1])
+        else:
+            self.__state[SEQ] = [[iterations, iterations, index+1],]
         return DISP_CONTINUE, None
     
-    def __stopseq(self, params, index):
-        return DISP_CONTINUE, None
+    def __endseq(self, params, index):
+        """
+        End an iteration sequence
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
+        if SEQ in self.state:
+            if len(self.__state[SEQ]) > 0:
+                if self.__state[SEQ][0][1] == 0:
+                    # Stop iterating
+                    del self.__state[SEQ][0]
+                    return DISP_CONTINUE, None
+                else:
+                    # Decrement the count
+                    self.__state[SEQ][0][1] -= 1
+                    # and loop back to the start
+                    return DISP_NEW_INDEX, self.__state[SEQ][0][2]
     
     def __starttime(self, params, index):
+        """
+        Start a time section
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __stoptime(self, params, index):
+        """
+        Stop a time sequence
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __pause(self, params, index):
+        """
+        Pause execution
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        delay = params
+        sleep(delay)
         return DISP_CONTINUE, None
     
     def __lpf(self, params, index):
+        """
+        Select a low pass filter
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
+        lpf = params
+        # Deactivate
+        self.__resetLPF()
+        # Activate
+        if lpf == LPF_160:
+            GPIO.output(PIN_160_1, GPIO.LOW)
+            GPIO.output(PIN_160_2, GPIO.LOW)
+        elif lpf == LPF_80:
+            GPIO.output(PIN_80_1, GPIO.LOW)
+            GPIO.output(PIN_80_2, GPIO.LOW)
+        elif lpf == LPF_4:
+            GPIO.output(PIN_40_1, GPIO.LOW)
+            GPIO.output(PIN_40_2, GPIO.LOW)
+        else:
+            return DISP_NONRECOVERABLE_ERROR, 'Failed to select LPF filter %s!', lpf
+            
         return DISP_CONTINUE, None
     
     def __antenna(self, params, index):
+        """
+        Select an antenna to radio route
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __loop(self, params, index):
+        """
+        Select a band and tune the loop
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __radio(self, params, index):
+        """
+        Execute a CAT command
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __wspr(self, params, index):
+        """
+        Send a WSPR command
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+
         return DISP_CONTINUE, None
     
     def __wsprry(self, params, index):
+        """
+        Invoke WsprryPi
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __fcd(self, params, index):
+        """
+        Send a command to a FunCubeDonglePro+
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_CONTINUE, None
     
     def __complete(self, params, index):
+        """
+        Commands complete
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
         return DISP_COMPLETE, None
     
     # =================================================================================
@@ -738,7 +905,17 @@ class Automate:
         """
         
         return round(math.pow(10, dBm/10)/1000)
+    
+    def __resetLPF():
+        """ Deactivate all LPF filters """
         
+        GPIO.output(PIN_160_1, GPIO.HIGH)
+        GPIO.output(PIN_160_2, GPIO.HIGH)
+        GPIO.output(PIN_80_1, GPIO.HIGH)
+        GPIO.output(PIN_80_2, GPIO.HIGH)
+        GPIO.output(PIN_40_1, GPIO.HIGH)
+        GPIO.output(PIN_40_2, GPIO.HIGH)
+            
 """
 
 Event thread.
