@@ -573,6 +573,9 @@ class Automate:
         
         """
         
+        if len(params) != 2:
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!', params
+        self.__doAntenna(params[0], params[1])
         return DISP_CONTINUE, None
     
     def __loop(self, params, index):
@@ -585,6 +588,9 @@ class Automate:
         
         """
         
+        if len(params) != 1:
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!', params
+        self.__doLoop(params[0])
         return DISP_CONTINUE, None
     
     def __radio(self, params, index):
@@ -808,30 +814,34 @@ class Automate:
     
     # =================================================================================
     # Antennas
-    def __doAntenna(self, antenna, band):
+    def __doAntenna(self, antenna, sourceSink):
         """
-        Instruct the antenna switching module to switch to the given antenna
-        Note this depends on the band
+        Instruct the antenna switching module to switch to the given route.
+        A route is an antenna to 
         
         Arguments:
-            antenna     --  the internal antenna name
-            band        --  the internal band name
+            antenna       --  the internal antenna name
+            sourceSink    --  the internal RX/TX/Both name
             
         """
         
-        # First main an tenna switching
-        if band == B_2: table = ANTENNA_TO_VU_MATRIX
-        else: table = ANTENNA_TO_HF_MATRIX
+        # The key to the dictionary id antenna:sourceSink
+        try:
+            key = '%s:%s' % (antenna, sourceSink)
+            matrix = ANTENNA_TO_SS_ROUTE[key]
+            for relay, state in matrix.items():
+                if relay != RELAY_NA:
+                    self.__antControl.set_relay(relay, state)
+                    if not self.__relayEvt.wait(EVNT_TIMEOUT):
+                        print('Timeout waiting for antenna changeover to respond to relay change!')
+                        return False
+                    self.__relayEvt.clear()
+        except Exception as e:
+            return False, str(e)
         
-        matrix = table[antenna]
-        for relay, state in matrix.items():
-            if relay != RELAY_NA:
-                self.__antControl.set_relay(relay, state)
-                if not self.__relayEvt.wait(EVNT_TIMEOUT):
-                    print('Timeout waiting for antenna changeover to respond to relay change!')
-                    return False
-                self.__relayEvt.clear()
-                
+        return True, None
+    
+    def __doLoop(self, antenna):            
         # Loop control
         if antenna == A_LOOP_160 or antenna == A_LOOP_80:
             # Switch the relays to the 160 position
