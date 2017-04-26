@@ -24,6 +24,7 @@
 # System imports
 import os, sys, socket, traceback
 import threading
+import subprocess 
 from time import sleep
 import datetime
 import math
@@ -226,13 +227,8 @@ class Automate:
         # Low to medium speed
         #self.__loopControl.speed(MOTOR_SPEED)
         
-        # Create the CAT controller
-        #self.__cat = cat.CAT(IC7100, CAT_SETTINGS)
-        #if self.__cat.start_thrd():
-        #    self.__catRunning = True
-        #self.__cat.set_callback(self.__catCallback)
-        
         # Script sequence and current state
+        self.__script = []
         # The script file is parsed into an internal list of the following form:
         #
         # [
@@ -240,8 +236,14 @@ class Automate:
         #   [Major command, [...]],
         #   ...
         # ]
-        self.__script = []
+        
         # State is kept in a separate dictionary.
+        self.__state = {
+            SEQ: [],
+            CYCLES: [None, None],
+            CAT: [None, None],
+            WSPPRY: [None, None, None]
+        }
         # {
         #     # Push down stack. If iterations nest, the new iteration is first in list.
         #     # As each iteration completes it is removed and execution continues with
@@ -254,7 +256,6 @@ class Automate:
         #     # WSPPRYPI fixed parameters
         #     WSPPRY: [options, callsign, locator, power]            
         # }
-        self.__state = {}
         
         # Set up a dispatch table for major commands
         self.__dispatch = {
@@ -623,24 +624,25 @@ class Automate:
         if subcommand == INVOKE:
             pass
         elif subcommand == RESET:
-            self.__doWSPRReset()            
+            return self.__doWSPRReset()            
         elif subcommand == IDLE:
-            self.__doWSPRIdle()
+            return self.__doWSPRIdle()
         elif subcommand == BAND:
-            self.__doWSPRBand()
+            return self.__doWSPRBand()
         elif subcommand == TX:
-            self.__doWSPRTx()
+            return self.__doWSPRTx()
         elif subcommand == POWER:
-            self.__doWSPRPower()
+            return self.__doWSPRPower()
         elif subcommand == CYCLES:
-            self.__doWSPRCycles()
+            return self.__doWSPRCycles()
         elif subcommand == SPOT:
-            self.__doWSPRSpot()
-        return DISP_CONTINUE, None
+            return self.__doWSPRSpot()
+        
+        return DISP_RECOVERABLE_ERROR, 'Invalid command to WSPR %s!', params
     
     def __wsprry(self, params, index):
         """
-        Invoke WsprryPi
+        Send a WsprryPi command
         
         Arguments:
             params      --  params for this command
@@ -648,7 +650,49 @@ class Automate:
         
         """
         
-        return DISP_CONTINUE, None
+        subcommand = params[0]
+        if subcommand == OPTIONS:
+            options = params[1:]
+            for n in range(len(options)-1):
+                if n < len(options)-1:
+                    optionStr = optionStr + option + ','
+                else:
+                    optionStr = optionStr + option
+                self.__state[WSPPRY][WSPPRY_OPTIONS] = optionStr
+            else:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+        elif subcommand == CALLSIGN:
+            if len(params) == 2:
+                _, callsign = params
+                self.__state[WSPPRY][WSPPRY_CALLSIGN] = callsign
+            else:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+        elif subcommand == LOCATOR:
+            if len(params) == 2:
+                _, locator = params
+                self.__state[WSPPRY][WSPPRY_LOCATOR] = locator
+            else:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+        elif subcommand == PWR:
+            if len(params) == 2:
+                _, power = params
+                self.__state[WSPPRY][WSPPRY_POWER] = power
+            else:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+        elif subcommand == START:
+            _, freqList = params
+            self.__wsprrypi_proc = subprocess.Popen([WSPRRYPI_PATH, self.__state[WSPPRY][WSPPRY_OPTIONS], self.__state[WSPPRY][WSPPRY_CALLSIGN], self.__state[WSPPRY][WSPPRY_LOCATOR], self.__state[WSPPRY][WSPPRY_PWR], freqList])
+        elif subcommand == STOP:
+            if self.__wsprrypi_proc.poll():
+                while True:
+                    print('Waiting for WsprryPi to finish')
+                    try:
+                        proc.wait(5)
+                        print('WsprryPi exited')
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+        return DISP_RECOVERABLE_ERROR, 'Invalid command to WsprryPi %s!', params
     
     def __fcd(self, params, index):
         """
@@ -697,20 +741,19 @@ class Automate:
         # Wait for WSPR to change bands
         # This can take up to 2m as switching occurs during IDLE
         timeout = EVNT_TIMEOUT * 30 # Allow 150s
-        r = False
         while True:
             if self.__bandEvt.wait(EVNT_TIMEOUT):
-                r = True
                 break
             else:
                 timeout -= EVNT_TIMEOUT
                 if timeout <= 0:
                     # Timeout waiting for the band switch
-                    print('Timeout waiting for WSPR to switch bands!')
-                    break
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for WSPR to switch bands!'
+                    
         self.__bandEvt.clear()
         self.__waitingBandNo = None
-        return r
+        
+        return DISP_CONTINUE, None
              
     def __doWSPRTx(self, tx, power):
         """
@@ -735,7 +778,8 @@ class Automate:
             cmd = 0
         # Do TX command
         self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
+        
+        return DISP_CONTINUE, None
        
     def __doWSPRSpot(self, spot):
         """
@@ -749,7 +793,8 @@ class Automate:
         if spot: cmd = 1
         else: cmd = 0
         self.__cmdSock.sendto(('upload:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
+        
+        return DISP_CONTINUE, None
        
     def __doWSPRCycles(self, cycles, tx):
         """
@@ -785,11 +830,11 @@ class Automate:
                 timeout -= EVNT_TIMEOUT
                 if timeout <= 0:
                     # Timeout waiting for the cycle count
-                    print('Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycles - cycleCount + 1))
-                    return False
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for WSPR to complete %d cycles. Aborted at cycle %d!' % (cycles, cycles - cycleCount + 1)
                 else:
-                    continue           
-        return True
+                    continue
+                
+        return DISP_CONTINUE, None
     
     def __doWSPRIdle(self, state):
         """
@@ -803,7 +848,8 @@ class Automate:
         if state: cmd = 1
         else: cmd = 0
         self.__cmdSock.sendto(('idle:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
+        
+        return DISP_CONTINUE, None
     
     def __doWSPRReset(self):
         """
@@ -814,7 +860,8 @@ class Automate:
         """
         
         self.__cmdSock.sendto('reset'.encode('utf-8'), (CMD_IP, CMD_PORT))
-        return True
+        
+        return DISP_CONTINUE, None
     
     # =================================================================================
     # Antennas

@@ -26,6 +26,10 @@ sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 from commondefs import *
 
 # ===============================================================================
+# Paths
+WSPRRYPI_PATH = 'home/pi/Projects/WsprryPi/wspr'
+
+# ===============================================================================
 # WSPR sockets
 CMD_IP = '127.0.0.1'
 CMD_PORT = 10000
