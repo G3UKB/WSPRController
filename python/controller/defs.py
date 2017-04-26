@@ -59,6 +59,8 @@ PIN_40_2 = 26   # Rly 4
 
 # ===============================================================================
 # Radio definitions
+CAT_ICOM = 'Icom-7100'
+CAT_YAESU = 'FT-857'
 
 # CAT settings
 CAT_SETTINGS = {

@@ -569,14 +569,14 @@ class Automate:
         
         Arguments:
             params      --  params for this command
+                            antenna, sourcesink
             index       --  current index into command structure
         
         """
         
         if len(params) != 2:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!', params
-        self.__doAntenna(params[0], params[1])
-        return DISP_CONTINUE, None
+        return self.__doAntenna(params[0], params[1])
     
     def __loop(self, params, index):
         """
@@ -584,26 +584,30 @@ class Automate:
         
         Arguments:
             params      --  params for this command
+                            band for loop
             index       --  current index into command structure
         
         """
         
         if len(params) != 1:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!', params
-        self.__doLoop(params[0])
-        return DISP_CONTINUE, None
+        return self.__doLoop(params[0])
     
     def __radio(self, params, index):
         """
-        Execute a CAT command
+        Execute a RADIO command
         
         Arguments:
             params      --  params for this command
+                            sub-command dependent
             index       --  current index into command structure
         
         """
         
-        return DISP_CONTINUE, None
+        if len(params) < 2:
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio %s!', params
+        
+        return doRadio(params)
     
     def __wspr(self, params, index):
         """
@@ -833,16 +837,22 @@ class Automate:
                 if relay != RELAY_NA:
                     self.__antControl.set_relay(relay, state)
                     if not self.__relayEvt.wait(EVNT_TIMEOUT):
-                        print('Timeout waiting for antenna changeover to respond to relay change!')
-                        return False
+                        return DISP_RECOVERABLE_ERROR, 'Timeout waiting for antenna changeover to respond to relay change!'
                     self.__relayEvt.clear()
         except Exception as e:
-            return False, str(e)
+            return DISP_NONRECOVERABLE_ERROR, 'Exception in antenna switching [%s]' % (str(e))
         
-        return True, None
+        return DISP_CONTINUE, None
     
     def __doLoop(self, antenna):            
-        # Loop control
+        """
+        Instruct the loop module to set and tune the selected loop
+        
+        Arguments:
+            antenna       --  the internal antenna name for the loop
+            
+        """
+        
         if antenna == A_LOOP_160 or antenna == A_LOOP_80:
             # Switch the relays to the 160 position
             matrix = ANTENNA_TO_LOOP_MATRIX[antenna]
@@ -851,70 +861,84 @@ class Automate:
                 else: state = 1
                 self.__loopControl.setRelay((relay, state))
                 if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                    print('Timeout waiting for loop changeover to respond to relay change!')
-                    return False
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
             # Set the motor and position parameters
             self.__loopControl.setCapMaxSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                print('Timeout waiting for loop changeover to respond to cap max change!')
-                return False
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to cap max change!'
             self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][1])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                print('Timeout waiting for loop changeover to respond to cap min change!')
-                return False
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to cap min change!'
             self.__loopControl.setLowSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                print('Timeout waiting for loop changeover to respond to low freq change!')
-                return False
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to low freq change!'
             self.__loopControl.setHighSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                print('Timeout waiting for loop changeover to respond to high freq change!')
-                return False
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to high freq change!'
             # Set the position for 160m or 80m WSPR dial frequency
             self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][L_POSITION])
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
-                print('Timeout waiting for loop changeover to respond to position change!')
-                return False
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
+        else:
+            return DISP_RECOVERABLE_ERROR, 'Unknown loop antenna %s' % (antenna)
         
-        return True
+        return DISP_CONTINUE, None
     
     # =================================================================================
     # Radios
-    def __doRadio(self, radio, band):
+    def __doRadio(self, params):
         """
-        If external then do nothing.
-        If internal then use a CAT command to change the radio frequency.
-        The band idntifies the frequency via a lookup table.
+        Execute radio CAT commands
         
         Arguments:
-            radio    --  R_INTERNAL or R_EXTERNAL
-            band     --  the internal band name
-            
+            params    --  subcommand dependent
             
         """
         
-        if radio == R_INTERNAL:
-            # Check connectivity
-            if not self.__catRunning:
+        subCommand = params[0]
+        if subcommand == SC_COM:
+            if len(params) != 4:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+            else:
+                _, radio, baud, com = params
+                if radio == CAT_ICOM:
+                    CAT_SETTINGS[VARIENT] = CAT_VARIANTS[0]
+                    radio = CAT_VARIANTS[0]
+                else:
+                    CAT_SETTINGS[VARIENT] = CAT_VARIANTS[1]
+                    radio = CAT_VARIANTS[1]
+                CAT_SETTINGS[SERIAL][0] = com
+                CAT_SETTINGS[SERIAL][1] = baud
+                self.__cat = cat.CAT(radio, CAT_SETTINGS)
                 if self.__cat.start_thrd():
                     self.__catRunning = True
                 else:
+                    return DISP_RECOVERABLE_ERROR, 'Failed to start CAT %s!', params
+                self.__cat.set_callback(self.__catCallback)                
+        elif subcommand == SC_FREQ:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+            else:
+                _, band = params
+                dialFrequency = BAND_TO_FREQ[band]
+                self.__catEvt.clear()
+                self.__cat.do_command(CAT_FREQ_SET, dialFrequency)
+                if not self.__catEvt.wait(EVNT_TIMEOUT*2):
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for radio to respond to set frequency command!'
+                self.__catEvt.clear()            
+        elif subcommand == SC_MODE:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+            else:
+                _, mode = params
+                self.__catEvt.clear()
+                self.__cat.do_command(CAT_MODE_SET, mode)
+                if not self.__catEvt.wait(EVNT_TIMEOUT*2):
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for radio to respond to set mode command!'
                     return False
-                    
-            # Get the frequency for the band
-            dialFrequency = BAND_TO_FREQ[band]
-            self.__catEvt.clear()
-            self.__cat.do_command(CAT_MODE_SET, MODE_USB)
-            if not self.__catEvt.wait(EVNT_TIMEOUT*2):
-                print('Timeout waiting for radio to respond to mode change!')
-                return False
-            self.__catEvt.clear()
-            self.__cat.do_command(CAT_FREQ_SET, dialFrequency)
-            if not self.__catEvt.wait(EVNT_TIMEOUT*2):
-                print('Timeout waiting for radio to respond to frequency change!')
-                return False
-            self.__catEvt.clear()
-            return True
+                self.__catEvt.clear()
+            
+        return DISP_CONTINUE, None
         
     # =======================================================================================
     # Helpers
