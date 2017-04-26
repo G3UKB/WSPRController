@@ -26,7 +26,7 @@ sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 from commondefs import *
 
 # ===============================================================================
-# Network
+# WSPR sockets
 CMD_IP = '127.0.0.1'
 CMD_PORT = 10000
 EVNT_IP = '127.0.0.1'
@@ -39,33 +39,7 @@ EVNT_TIMEOUT = 5
 # ===============================================================================
 # Internal structure for script files
 
-# RUN section
-S_RUN = 'srun'
-S_REPEAT = 'srepeat'
-S_LOOP = 'sloop'
-S_ONCE = 'sonce'
-
-# Stop section
-S_STOP = 'sstop'
-S_IDLE = 'sidle'
-S_CONTINUE = 'scontinue'
-
-# Power section
-S_POWER = 'spower'
-
-# Command section
-S_COMMANDS = 'scommands'
-# Offsets into command structure
-C_START = 0
-C_STOP = 1
-C_BAND = 2
-C_TX = 3
-C_PWR = 4
-C_ANTENNA = 5
-C_CYCLES = 6
-C_SPOT = 7
-C_RADIO = 8
-
+# Execution result codes
 DISP_CONTINUE = 0
 DISP_COMPLETE = 1
 DISP_RECOVERABLE_ERROR = 2
@@ -85,8 +59,6 @@ PIN_40_2 = 26   # Rly 4
 
 # ===============================================================================
 # Radio definitions
-R_INTERNAL = 'rinternal'
-R_EXTERNAL = 'rexternal'
 
 # CAT settings
 CAT_SETTINGS = {
@@ -140,7 +112,7 @@ BAND_TO_INTERNAL = {
 # Key = entry in internal table
 # Value = id to be used externally (i.e. WSPR)
 BAND_TO_EXTERNAL = {
-    B_160:  2,
+    B_160:   2,
     B_80:    3,
     B_60:    4,
     B_40:    5,
@@ -157,7 +129,7 @@ BAND_TO_EXTERNAL = {
 
 # Convert the band to a frequency for WSPR operation on that band
 BAND_TO_FREQ = {
-    B_160:  1.8366,
+    B_160:   1.8366,
     B_80:    3.5926,
     B_60:    5.2872,
     B_40:    7.0386,
@@ -175,37 +147,47 @@ BAND_TO_FREQ = {
 # ===============================================================================
 # Antenna definitions
 # Note this depends on what you have available and what switching arrangement you have
+# Switching works on a route basis i.e. an antenna to an RX input or a TX output or both
 
+# Antennas available
+A_LOOP = 'A_LOOP'
 A_LOOP_160 = 'A_LOOP_160'
 A_LOOP_80 = 'A_LOOP_80'
 A_EFD_80_10 = 'A_EFD_80_10'
 A_DIPOLE_6_4_2 = 'A_DIPOLE_6_4_2'
 A_VERT_6_4_2 = 'A_VERT_6_4_2'
 
+# Sources/sinks available
+SS_FCD_PRO_PLUS = 'FCD_PRO_PLUS'
+SS_WSPRRYPI = 'SS_WSPRRYPI'
+SS_IC7100 = 'SS_IC7100'
+
+# Map antenna name in the script file to the internal name
 ANTENNA_TO_INTERNAL = {
-    '160m-loop':        A_LOOP_160,
-    '80m-loop':         A_LOOP_80,
+    '160-80m-loop':     A_LOOP,
     '80m-10m-EFD':      A_EFD_80_10,
     '6-4-2m-dipole':    A_DIPOLE_6_4_2,
     '6-4-2m-vert':      A_VERT_6_4_2,
 }
+# Map source/sink name in the script file to the internal name
+SS_TO_INTERNAL = {
+    'FCD-Pro-Plus':     SS_FCD_PRO_PLUS,
+    'RPi-WsprryPi':     SS_WSPRRYPI,
+    'IC-7100':          SS_IC7100,
+}
 
-# These are the relay switching instructions for the 7100 HF and 7100 VU antenna sockets
+# These are the relay switching instructions for the above routings
 RELAY_ON = 'relayon'
 RELAY_OFF = 'relayoff'
 RELAY_NA = 'rna'
 
-ANTENNA_TO_HF_MATRIX = {
-    A_LOOP_160:     {1: RELAY_ON, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
-    A_LOOP_80:      {1: RELAY_ON, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
-    A_EFD_80_10:    {1: RELAY_OFF, 2:RELAY_NA, 3: RELAY_OFF, 4: RELAY_NA},
-    A_DIPOLE_6_4_2: {1: RELAY_NA, 2:RELAY_ON, 3: RELAY_ON, 4: RELAY_ON},
-    A_VERT_6_4_2:   {1: RELAY_NA, 2:RELAY_OFF, 3: RELAY_ON, 4: RELAY_ON},
-}
-
-ANTENNA_TO_VU_MATRIX = {
-    A_DIPOLE_6_4_2: {1: RELAY_NA, 2:RELAY_ON, 3: RELAY_NA, 4: RELAY_OFF},
-    A_VERT_6_4_2:   {1: RELAY_NA, 2:RELAY_OFF, 3: RELAY_NA, 4: RELAY_OFF},
+ANTENNA_TO_SS_ROUTE = {
+    '%s:%s' % (A_EFD_80_10, SS_FCD_PRO_PLUS):   {1: RELAY_OFF, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_OFF, 5:RELAY_NA},
+    '%s:%s' % (A_EFD_80_10, SS_WSPRRYPI):       {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_NA},
+    '%s:%s' % (A_EFD_80_10, SS_IC7100):         {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_NA},
+    '%s:%s' % (A_LOOP, SS_WSPRRYPI):            {1: RELAY_ON, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_NA, 5:RELAY_ON},
+    '%s:%s' % (A_LOOP, SS_FCD_PRO_PLUS):        {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_OFF, 4:RELAY_NA, 5:RELAY_OFF},
+    '%s:%s' % (A_LOOP, SS_IC7100):              {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_OFF, 4:RELAY_NA, 5:RELAY_OFF},
 }
 
 # Default parameters
