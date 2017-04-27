@@ -88,12 +88,12 @@ be more easily replaced as required for different implementations.
     the various inputs and outputs of the system. In the case of the RPi station for
     example it is possible to TX and RX on different bands concurrently and then switch
     antennas to change the TX/RX bands. In addition it may also be required to switch
-    antennas to the main station. The author has a switch system that supports
+    antennas to the main station. The author has built a switch system that supports
     comprehensive routing in a many to many configuration.
     3. Antenna tuning. This may be an area of difficulty when using antennas that require
     tuning on different bands. Auto-tuners will not work at very low power (RPi barefoot
     outputs 10mW). Thus if tuning is required and there is insufficient power for an
-    auto-tuner the tuner must support set-points for different frequencies. The autor
+    auto-tuner the tuner must support set-points for different frequencies. The author
     currently uses an End Fed Dipole which will support 40/20/15/10 without tuning and
     160/80 loops that require tuning but are supported by a loop tuning system that
     can be configured with frequency setpoints.
@@ -173,6 +173,8 @@ class Automate:
                 LOCATOR, locator        # Set locator for tx data. Must be set before START.
                 PWR, power              # Set Tx power in dBm for tx data. Must be set before START.
                 START, f1, f2, f3, ...  # Start WsprryPi with the given frequency sequence and settings.
+                WAIT                    # Wait for WsprryPi to terminate
+                KILL                    # Uncerimoneously kill WsprryPi (this may not work on Windows)
                 STOP                    # Stop WsprryPI if running.
         FCD                             # Set FCDPro+ attributes using fcdctl program
                 FREQ, MHz               # Set the FCDPro+ frequency.
@@ -196,8 +198,6 @@ class Automate:
         
         self.__scriptPath = scriptPath
         
-        #CAT_SETTINGS[SERIAL][0] = self.__comPort
-        
         # Create command socket
         self.__cmdSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
@@ -215,17 +215,18 @@ class Automate:
         # Instance vars
         self.__waitingBandNo = None
         self.__catRunning = False
+        self.__wsprrypi_proc = None
         
         # Create the antenna controller
-        #self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
+        self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
         
         # Create the loop controller
-        #self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
+        self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
         # Allow full extension for the moment
-        #self.__loopControl.setLowSetpoint(0)
-        #self.__loopControl.setHighSetpoint(100)
+        self.__loopControl.setLowSetpoint(0)
+        self.__loopControl.setHighSetpoint(100)
         # Low to medium speed
-        #self.__loopControl.speed(MOTOR_SPEED)
+        self.__loopControl.speed(MOTOR_SPEED)
         
         # Script sequence and current state
         self.__script = []
@@ -509,7 +510,44 @@ class Automate:
         
         """
         
-        return DISP_CONTINUE, None
+        if len(params) != 2:
+            return DISP_RECOVERABLE_ERROR, 'Wrong number of parameters for time section %s ... skipping section' % (params)
+        startHour, stopHour = params
+        if (startHour < 0 or startHour > 23) or (stopHour < 0 or stopHour > 23):
+            return DISP_RECOVERABLE_ERROR, 'Invalid parameters for time section %s ... skipping section' % (params)
+        
+        # Is current time within timespan
+        currentHour = datetime.datetime.now().hour
+        if (startHour == 0 and stopHour == 0):
+            # This means all day, although absence of a time command does the same thing
+            runSection = True
+        elif stopHour < startHour:
+            # Crossing midnight
+            if currentHour <= stopHour:
+                # Past midnight
+                runSection = True
+            else:
+                # Before midnight
+                if currentHour >= startHour:
+                    runSection = True
+        else:
+            # Normal progression
+            if startHour <= currentHour and stopHour >= currentHour:
+                runSection = True
+        
+        # Decision time
+        if runSection:
+            # Continue through the section
+            return DISP_CONTINUE, None
+        else:
+            # We need to skip to the ENDTIME command
+            # The index param is the next command index
+            while index < len(self.__script):
+                commandLine = self.__script[index]
+                if commandLine[0] == ENDTIME:
+                    return DISP_NEW_INDEX, index + 1
+            # oops, didn't find the ENDTIME
+            return DISP_NONRECOVERABLE_ERROR, 'Reached end of commands without finding an ENDTIME command!'      
     
     def __stoptime(self, params, index):
         """
@@ -521,6 +559,7 @@ class Automate:
         
         """
         
+        # This is a noop as it is only there as a skip to command for STARTTIME
         return DISP_CONTINUE, None
     
     def __pause(self, params, index):
@@ -560,7 +599,7 @@ class Automate:
             GPIO.output(PIN_40_1, GPIO.LOW)
             GPIO.output(PIN_40_2, GPIO.LOW)
         else:
-            return DISP_NONRECOVERABLE_ERROR, 'Failed to select LPF filter %s!', lpf
+            return DISP_NONRECOVERABLE_ERROR, 'Failed to select LPF filter %s!' % (lpf)
             
         return DISP_CONTINUE, None
     
@@ -576,7 +615,7 @@ class Automate:
         """
         
         if len(params) != 2:
-            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!', params
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!' % (params)
         return self.__doAntenna(params[0], params[1])
     
     def __loop(self, params, index):
@@ -591,7 +630,7 @@ class Automate:
         """
         
         if len(params) != 1:
-            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!', params
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
         return self.__doLoop(params[0])
     
     def __radio(self, params, index):
@@ -606,7 +645,7 @@ class Automate:
         """
         
         if len(params) < 2:
-            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio %s!', params
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio %s!' % (params)
         
         return doRadio(params)
     
@@ -660,39 +699,60 @@ class Automate:
                     optionStr = optionStr + option
                 self.__state[WSPPRY][WSPPRY_OPTIONS] = optionStr
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == CALLSIGN:
             if len(params) == 2:
                 _, callsign = params
                 self.__state[WSPPRY][WSPPRY_CALLSIGN] = callsign
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == LOCATOR:
             if len(params) == 2:
                 _, locator = params
                 self.__state[WSPPRY][WSPPRY_LOCATOR] = locator
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == PWR:
             if len(params) == 2:
                 _, power = params
                 self.__state[WSPPRY][WSPPRY_POWER] = power
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == START:
             _, freqList = params
-            self.__wsprrypi_proc = subprocess.Popen([WSPRRYPI_PATH, self.__state[WSPPRY][WSPPRY_OPTIONS], self.__state[WSPPRY][WSPPRY_CALLSIGN], self.__state[WSPPRY][WSPPRY_LOCATOR], self.__state[WSPPRY][WSPPRY_PWR], freqList])
-        elif subcommand == STOP:
+            # Construct parameter list
+            p = []
+            p.append(WSPRRYPI_PATH)
+            for option in self.__state[WSPPRY][WSPPRY_OPTIONS]:
+                p.append(option)
+            p.append(self.__state[WSPPRY][WSPPRY_CALLSIGN])
+            p.append(self.__state[WSPPRY][WSPPRY_LOCATOR])
+            p.append(self.__state[WSPPRY][WSPPRY_PWR])
+            for freq in freqList:
+                p.append(freq)
+            # Invoke WsprryPi
+            try:
+                self.__wsprrypi_proc = subprocess.Popen(p)
+            except Exception as e:
+                return DISP_NONRECOVERABLE_ERROR, 'Exception starting WsprryPi [%s]' % (str(e)) % (params)
+        elif subcommand == WAIT:
             if self.__wsprrypi_proc.poll():
                 while True:
                     print('Waiting for WsprryPi to finish')
                     try:
-                        proc.wait(5)
+                        # Give it 2.5 minutes to close as cycles are 2 mins
+                        self.__wsprrypi_proc.wait(150)
                         print('WsprryPi exited')
                         break
                     except subprocess.TimeoutExpired:
-                        continue
-        return DISP_RECOVERABLE_ERROR, 'Invalid command to WsprryPi %s!', params
+                        self.__wsprrypi_proc.kill()
+                        return DISP_RECOVERABLE_ERROR, 'Timeout waiting for WsprryPi to terminate ... killing!'
+                        break
+        elif subcommand == KILL:
+            if self.__wsprrypi_proc.poll():
+                self.__wsprrypi_proc.kill()
+            
+        return DISP_CONTINUE, None
     
     def __fcd(self, params, index):
         """
@@ -704,6 +764,36 @@ class Automate:
         
         """
         
+        if len(params != 2):
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for FCD command %s!' % (params)
+        
+        subcommand = params[0]
+        cmdList = [FCDCTL_PATH,]
+        
+        # fcdctl is a command line program which should execute the command and exit.
+        if subcommand == FREQ:
+            _ , freq = params
+            cmdList.append('-f')
+            cmdList.append(freq)
+        elif subcommand == LNA:
+            _ , gain = params
+            if gain == 'on': gain = '1'
+            else: gain = '0'
+            cmdList.append('-g')
+            cmdList.append(gain)
+        elif subcommand == MIXER:
+            _ , gain = params
+            if gain == 'on': gain = '1'
+            else: gain = '0'
+            cmdList.append('-m')
+            cmdList.append(gain)
+        elif subcommand == IF:
+            _ , gain = params
+            cmdList.append('-i')
+            cmdList.append(str(gain))
+        else:
+            return DISP_NONRECOVERABLE_ERROR, 'Invalid command for FCD %s!' % (params)
+            
         return DISP_CONTINUE, None
     
     def __complete(self, params, index):
@@ -945,7 +1035,7 @@ class Automate:
         subCommand = params[0]
         if subcommand == SC_COM:
             if len(params) != 4:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
                 _, radio, baud, com = params
                 if radio == CAT_ICOM:
@@ -960,11 +1050,11 @@ class Automate:
                 if self.__cat.start_thrd():
                     self.__catRunning = True
                 else:
-                    return DISP_RECOVERABLE_ERROR, 'Failed to start CAT %s!', params
+                    return DISP_RECOVERABLE_ERROR, 'Failed to start CAT %s!' % (params)
                 self.__cat.set_callback(self.__catCallback)                
         elif subcommand == SC_FREQ:
             if len(params) != 2:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
                 _, band = params
                 dialFrequency = BAND_TO_FREQ[band]
@@ -975,7 +1065,7 @@ class Automate:
                 self.__catEvt.clear()            
         elif subcommand == SC_MODE:
             if len(params) != 2:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!', params
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
                 _, mode = params
                 self.__catEvt.clear()
@@ -1089,7 +1179,6 @@ def main():
         # Parse the file
         r, struct = app.parseScript()
         if r:
-            #print (struct)
             r = app.executeScript()
             if not r:
                 print('Error: Execution error!')

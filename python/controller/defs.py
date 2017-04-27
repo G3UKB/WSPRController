@@ -28,6 +28,7 @@ from commondefs import *
 # ===============================================================================
 # Paths
 WSPRRYPI_PATH = 'home/pi/Projects/WsprryPi/wspr'
+FCDCTL_PATH = 'home/pi/Projects/fcdctl/fcdctl'
 
 # ===============================================================================
 # WSPR sockets
@@ -41,9 +42,50 @@ EVNT_PORT = 10001
 EVNT_TIMEOUT = 5
 
 # ===============================================================================
-# Internal structure for script files
+# Internal constants for script files
 
-# Execution result codes
+SEQ         = 'SEQ'         # Start a sequence
+ENDSEQ      = 'ENDSEQ'      # End of loop
+TIME        = 'TIME'        # Start a time banded section
+ENDTIME     = 'ENDTIME'     # End a time banded section
+PAUSE       = 'PAUSE'       # Pause the script file
+COMPLETE    = 'COMPLETE'    # Script complete
+LPF         = 'LPF'         # Commands related to the LPF filters
+ANTENNA     = 'ANTENNA'     # Commands related to antenna switching
+LOOP        = 'LOOP'        # Commands related to the loop switching and tuning
+
+RADIO       = 'RADIO'       # CAT commands to external radios
+CAT         = 'CAT'
+FREQ        = 'FREQ'
+MODE        = 'MODE'
+
+WSPR        = 'WSPR'        # Commands related to WSPR
+INVOKE      = 'INVOKE'      # Invoke WSPR if not running. Must be running before any other WSPR command.
+RESET       = 'RESET'       # Reset
+IDLE        = 'IDLE'        # Set idle on/off, i.e stop RX/TX
+BAND        = 'BAND'        # Set band for reporting
+TX          = 'TX'          # Set TX to 20% or 0%
+POWER       = 'POWER'       # Adjust power output when using external radio TX
+CYCLES      = 'CYCLES'      # Wait for n receive cycles
+SPOT        = 'SPOT'        # Set spotting on/off.
+
+WSPRRYPI    = 'WSPRRYPI'    # Commands related to WsprryPi
+OPTIONS     = 'OPTIONS'     # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
+CALLSIGN    = 'CALLSIGN'    # Set callsign for tx data. Must be set before START.
+LOCATOR     = 'LOCATOR'     # Set locator for tx data. Must be set before START.
+PWR         = 'PWR'         # Set Tx power in dBm for tx data. Must be set before START.
+START       = 'START'       # Start WsprryPi with the given frequency sequence and settings.
+WAIT        = 'WAIT'        # Wait for WsprryPi to terminate
+KILL        = 'KILL'        # Uncerimoneously kill WsprryPi (this may not work on Windows)
+STOP        = 'STOP'        # Stop WsprryPI if running.
+
+FCD         = 'FCD'         # Commands related to the FunCubeDonglePro+
+FREQ        = 'FREQ'        # Set the FCDPro+ frequency.
+LNA         = 'LNA'         # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
+MIXER       = 'MIXER'       # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
+IF          = 'IF'          # Set the FCDPro+ IF gain, 0-59 dB.
+   
+# Script Execution result codes
 DISP_CONTINUE = 0
 DISP_COMPLETE = 1
 DISP_RECOVERABLE_ERROR = 2
