@@ -149,7 +149,7 @@ class Automate:
         PAUSE, n.n  # Pause execution for n.n seconds
         COMPLETE    # End of script
       Hardware commands:
-        LPF, band   # Where band is 160/80/40 etc. Mapping is involved to relay activation.
+        LPF, band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
         ANTENNA, source, dest
                     # Sets up a route between an antenna and a destination TX or RX capability.
                     # e.g. 160-Loop, FCDPro+. Mapping is involved to relay activation.
@@ -603,7 +603,7 @@ class Automate:
         elif lpf == LPF_80:
             GPIO.output(PIN_80_1, GPIO.LOW)
             GPIO.output(PIN_80_2, GPIO.LOW)
-        elif lpf == LPF_4:
+        elif lpf == LPF_40:
             GPIO.output(PIN_40_1, GPIO.LOW)
             GPIO.output(PIN_40_2, GPIO.LOW)
         else:

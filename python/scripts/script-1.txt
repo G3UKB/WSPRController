@@ -8,7 +8,7 @@
 #    PAUSE, n.n  # Pause execution for n.n seconds
 #    COMPLETE    # End of script
 #Hardware commands:
-#    LPF, band   # Where band is 160/80/40 etc. Mapping is involved to relay activation.
+#    LPF, band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
 #    ANTENNA, source, dest
 #                # Sets up a route between an antenna and a destination TX or RX capability.
 #                # e.g. 160-Loop, FCDPro+. Mapping is involved to relay activation.
@@ -46,4 +46,10 @@
 SEQ: 10
 PAUSE: 1.0
 ENDSEQ:
+LPF: LPF-160
+PAUSE: 2.0
+LPF: LPF-80
+PAUSE: 2.0
+LPF: LPF-40
+PAUSE: 2.0
 COMPLETE:

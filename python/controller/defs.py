@@ -50,7 +50,12 @@ TIME        = 'TIME'        # Start a time banded section
 ENDTIME     = 'ENDTIME'     # End a time banded section
 PAUSE       = 'PAUSE'       # Pause the script file
 COMPLETE    = 'COMPLETE'    # Script complete
+
 LPF         = 'LPF'         # Commands related to the LPF filters
+LPF_160     = 'LPF-160'
+LPF_80      = 'LPF-80'
+LPF_40      = 'LPF-40'
+
 ANTENNA     = 'ANTENNA'     # Commands related to antenna switching
 LOOP        = 'LOOP'        # Commands related to the loop switching and tuning
 
