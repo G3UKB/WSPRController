@@ -278,7 +278,10 @@ class Automate:
         }
         
         # Low pass filters
-        # Set modes and deactivate all relays        
+        # Set modes and deactivate all relays
+        # Initialise
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
         GPIO.setup(PIN_160_1, GPIO.OUT)
         GPIO.setup(PIN_160_2, GPIO.OUT)
         GPIO.setup(PIN_80_1, GPIO.OUT)
