@@ -22,7 +22,7 @@
 #
 
 import sys, os
-sys.path.append(os.path.join('..','..','..','..','Common','python'))
+sys.path.append(os.path.join('..','..','..','Common','python'))
 from commondefs import *
 
 # ===============================================================================
