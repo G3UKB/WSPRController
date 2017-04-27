@@ -1167,7 +1167,7 @@ def main():
         #   arg1    --  path to script file
         #
         if len(sys.argv) != 2:
-            print('Usage: python automation.py path-to-script-file')
+            print('Usage: python wsprauto.py path-to-script-file')
             sys.exit(0)
         path = sys.argv[1]
         if not os.path.exists(path):

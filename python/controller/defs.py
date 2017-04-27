@@ -92,6 +92,12 @@ DISP_RECOVERABLE_ERROR = 2
 DISP_NONRECOVERABLE_ERROR = 3
 DISP_NEW_INDEX = 4
 
+# Constants for state structure
+SEQ = 'SEQ'
+CYCLES = 'CYCLES'
+CAT = 'CAT'
+WSPPRY = 'WSPPRY'
+                
 # ===============================================================================
 # Low Pass Filters
 # Pin to relay allocation
