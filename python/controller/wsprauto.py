@@ -30,6 +30,8 @@ import datetime
 import math
 import logging
 import logging.handlers
+# This is specific to the RPi for LPF switching
+import RPi.GPIO as GPIO
 
 # Application imports
 from defs import *
