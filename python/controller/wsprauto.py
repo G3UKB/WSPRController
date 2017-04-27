@@ -593,7 +593,7 @@ class Automate:
         
         """
         
-        lpf = params
+        lpf, = params
         # Deactivate
         self.__resetLPF()
         # Activate
