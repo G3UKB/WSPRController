@@ -218,6 +218,8 @@ class Automate:
         self.__waitingBandNo = None
         self.__catRunning = False
         self.__wsprrypi_proc = None
+        self.__cat  = None
+        self.__loopControl = None
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -313,8 +315,8 @@ class Automate:
         
         self.__eventThrd.terminate()
         self.__eventThrd.join()
-        #self.__cat.terminate()
-        #self.__loopControl.terminate()
+        if self.__cat != None: self.__cat.terminate()
+        if self.__loopControl != None: self.__loopControl.terminate()
     
     # =================================================================================
     # Main processing     
@@ -336,6 +338,7 @@ class Automate:
                     # Comment line
                     continue
                 line = line.strip('\n\r')
+                if len(line) == 0: continue
                 cmd, remainder = line.split(':')
                 self.__script.append([])
                 self.__script[index].append(cmd)
@@ -474,10 +477,10 @@ class Automate:
         
         """
         
-        iterations = params
-        
+        iterations, = params
+        iterations = int(iterations)
         # Prepend this sequence start point into the structure
-        if SEQ in self.state:
+        if SEQ in self.__state:
             self.__state[SEQ].insert(0, [iterations, iterations, index+1])
         else:
             self.__state[SEQ] = [[iterations, iterations, index+1],]
@@ -493,7 +496,7 @@ class Automate:
         
         """
         
-        if SEQ in self.state:
+        if SEQ in self.__state:
             if len(self.__state[SEQ]) > 0:
                 if self.__state[SEQ][0][1] == 0:
                     # Stop iterating
@@ -576,8 +579,8 @@ class Automate:
             index       --  current index into command structure
         
         """
-        delay = params
-        sleep(delay)
+        delay, = params
+        sleep(float(delay))
         return DISP_CONTINUE, None
     
     def __lpf(self, params, index):
