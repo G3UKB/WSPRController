@@ -1107,7 +1107,7 @@ class Automate:
         
         return round(math.pow(10, dBm/10)/1000)
     
-    def __resetLPF():
+    def __resetLPF(self):
         """ Deactivate all LPF filters """
         
         GPIO.output(PIN_160_1, GPIO.HIGH)
