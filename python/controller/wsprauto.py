@@ -801,7 +801,7 @@ class Automate:
         
         """
         
-        if len(params) != 2:
+        if len(params) > 2:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for FCD command %s!' % (params)
         
         subcommand = params[0]
