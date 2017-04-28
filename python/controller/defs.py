@@ -27,8 +27,8 @@ from commondefs import *
 
 # ===============================================================================
 # Paths
-WSPRRYPI_PATH = 'home/pi/Projects/WsprryPi/wspr'
-FCDCTL_PATH = 'home/pi/Projects/fcdctl/fcdctl'
+WSPRRYPI_PATH = '/home/pi/Projects/WsprryPi/wspr'
+FCDCTL_PATH = '/home/pi/Projects/fcdctl/fcdctl'
 
 # ===============================================================================
 # WSPR sockets

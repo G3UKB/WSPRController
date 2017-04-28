@@ -247,7 +247,7 @@ class Automate:
             SEQ: [],
             CYCLES: [None, None],
             CAT: [None, None],
-            WSPRRY: [None, None, None]
+            WSPRRY: [None, None, None, None]
         }
         # {
         #     # Push down stack. If iterations nest, the new iteration is first in list.
@@ -733,43 +733,37 @@ class Automate:
         subcommand = params[0]
         if subcommand == WSPRRY_OPTIONS:
             options = params[1:]
-            optionStr = ''
-            for n in range(len(options)-1):
-                if n < len(options)-1:
-                    optionStr = optionStr + options[n] + ','
-                else:
-                    optionStr = optionStr + options[n]
-                self.__state[WSPRRY][WSPRRY_OPTIONS] = optionStr
-            else:
-                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
+            self.__state[WSPRRY][0] = options
         elif subcommand == WSPRRY_CALLSIGN:
             if len(params) == 2:
                 _, callsign = params
-                self.__state[WSPRRY][WSPRRY_CALLSIGN] = callsign
+                self.__state[WSPRRY][1] = callsign
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == WSPRRY_LOCATOR:
             if len(params) == 2:
                 _, locator = params
-                self.__state[WSPRRY][WSPRRY_LOCATOR] = locator
+                self.__state[WSPRRY][2] = locator
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
-        elif subcommand == WSPPRY_PWR:
+        elif subcommand == WSPRRY_PWR:
             if len(params) == 2:
                 _, power = params
-                self.__state[WSPRRY][WSPRRY_POWER] = power
+                self.__state[WSPRRY][3] = power
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
         elif subcommand == WSPRRY_START:
-            _, freqList = params
             # Construct parameter list
             p = []
+            p.append('sudo')
             p.append(WSPRRYPI_PATH)
-            for option in self.__state[WSPRRY][WSPRRY_OPTIONS]:
+            for option in self.__state[WSPRRY][0]:
                 p.append(option)
-            p.append(self.__state[WSPRRY][WSPRRY_CALLSIGN])
-            p.append(self.__state[WSPRRY][WSPRRY_LOCATOR])
-            p.append(self.__state[WSPRRY][WSPRRY_PWR])
+            p.append(self.__state[WSPRRY][1])
+            p.append(self.__state[WSPRRY][2])
+            p.append(self.__state[WSPRRY][3])
+            
+            freqList = params[1:]
             for freq in freqList:
                 p.append(freq)
             # Invoke WsprryPi
