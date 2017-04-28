@@ -291,11 +291,6 @@ class Automate:
         GPIO.setup(PIN_40_1, GPIO.OUT)
         GPIO.setup(PIN_40_2, GPIO.OUT)
         self.__resetLPF()
-
-        # Defs
-        LPF_160 = 'LPF-160'
-        LPF_80 = 'LPF-80'
-        LPF_40 = 'LPF-40'
         
         # Set up logging
         self.__logger = logging.getLogger('auto')
@@ -687,17 +682,43 @@ class Automate:
             if band in BAND_TO_EXTERNAL:
                 return self.__doWSPRBand(band)
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'WSPR BAND command must be "B-160,B-80 etc" %s!' % (params)
+                return DISP_NONRECOVERABLE_ERROR, 'WSPR BAND command must be "B-160,B-80" etc %s!' % (params)
         elif subcommand == TX:
-            return self.__doWSPRTx()
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR TX %s!' % (params)
+            _, state = params
+            if state == 'on': state = True
+            elif state == 'off': state = False
+            else: return DISP_NONRECOVERABLE_ERROR, 'WSPR TX command must be "on" or "off" %s!' % (params)
+            return self.__doWSPRTx(state)
         elif subcommand == POWER:
-            return self.__doWSPRPower()
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR POWER %s!' % (params)
+            _, power = params
+            try:
+                power = float(power)
+            except Exception as e:
+                return DISP_NONRECOVERABLE_ERROR, 'WSPR POWER command must be a float in watts %s!' % (params)
+            return self.__doWSPRPower(power)
         elif subcommand == CYCLES:
-            return self.__doWSPRCycles()
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR CYCLES %s!' % (params)
+            _, cycles = params
+            try:
+                cycles = int(power)
+            except Exception as e:
+                return DISP_NONRECOVERABLE_ERROR, 'WSPR CYCLES command must be a int %s!' % (params)
+            return self.__doWSPRCycles(cycles)
         elif subcommand == SPOT:
-            return self.__doWSPRSpot()
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR SPOT %s!' % (params)
+            _, state = params
+            if state == 'on': state = True
+            elif state == 'off': state = False
+            else: return DISP_NONRECOVERABLE_ERROR, 'WSPR SPOT command must be "on" or "off" %s!' % (params)
+            return self.__doWSPRSpot(state)
         
-        return DISP_RECOVERABLE_ERROR, 'Invalid command to WSPR %s!', params
+        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to WSPR %s!', params
     
     def __wsprry(self, params, index):
         """
