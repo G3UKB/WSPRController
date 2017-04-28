@@ -165,7 +165,7 @@ class Automate:
         WSPR    INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
                 RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
-                BAND, B-160 etc ...     # Set band for reporting
+                BAND, B_160 etc ...     # Set band for reporting
                 TX, on|off              # Set TX to 20% or 0%
                 POWER, nn.nn            # Adjust power output when using external radio TX
                 CYCLES, n               # Wait for n receive cycles
