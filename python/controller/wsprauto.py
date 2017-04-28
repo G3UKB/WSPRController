@@ -804,31 +804,40 @@ class Automate:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for FCD command %s!' % (params)
         
         subcommand = params[0]
-        cmdList = [FCDCTL_PATH,]
+        p = [FCDCTL_PATH,]
         
         # fcdctl is a command line program which should execute the command and exit.
         if subcommand == FREQ:
             _ , freq = params
-            cmdList.append('-f')
-            cmdList.append(freq)
+            p.append('-f')
+            p.append(freq)
         elif subcommand == LNA:
             _ , gain = params
             if gain == 'on': gain = '1'
             else: gain = '0'
-            cmdList.append('-g')
-            cmdList.append(gain)
+            p.append('-g')
+            p.append(gain)
         elif subcommand == MIXER:
             _ , gain = params
             if gain == 'on': gain = '1'
             else: gain = '0'
-            cmdList.append('-m')
-            cmdList.append(gain)
+            p.append('-m')
+            p.append(gain)
         elif subcommand == IF:
             _ , gain = params
-            cmdList.append('-i')
-            cmdList.append(str(gain))
+            p.append('-i')
+            p.append(str(gain))
         else:
             return DISP_NONRECOVERABLE_ERROR, 'Invalid command for FCD %s!' % (params)
+        
+        # Invoke fcdctl
+        try:
+            proc = subprocess.Popen(p)
+            proc.wait()
+            proc = subprocess.Popen([FCDCTL_PATH, '-s'])
+            proc.wait()
+        except Exception as e:
+            return DISP_NONRECOVERABLE_ERROR, 'Exception starting FCDCTL [%s]' % (str(e)) % (params)
             
         return DISP_CONTINUE, None
     
