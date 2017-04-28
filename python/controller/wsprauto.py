@@ -183,6 +183,7 @@ class Automate:
                 LNA, gain               # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
                 MIXER, gain             # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
                 IF, gain                # Set the FCDPro+ IF gain, 0-59 dB.
+                STATUS                  # Show status
     
     A log file is written to enable subsequent analysis of the results.
     Two versions of the file are written:
@@ -827,14 +828,14 @@ class Automate:
             _ , gain = params
             p.append('-i')
             p.append(str(gain))
+        elif subcommand == STATUS:
+            p.append('-s')
         else:
             return DISP_NONRECOVERABLE_ERROR, 'Invalid command for FCD %s!' % (params)
         
         # Invoke fcdctl
         try:
             proc = subprocess.Popen(p)
-            proc.wait()
-            proc = subprocess.Popen([FCDCTL_PATH, '-s'])
             proc.wait()
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception starting FCDCTL [%s]' % (str(e)) % (params)

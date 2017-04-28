@@ -94,6 +94,7 @@ FREQ        = 'FREQ'        # Set the FCDPro+ frequency.
 LNA         = 'LNA'         # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
 MIXER       = 'MIXER'       # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
 IF          = 'IF'          # Set the FCDPro+ IF gain, 0-59 dB.
+STATUS      = 'STATUS'      # Show status
    
 # Script Execution result codes
 DISP_CONTINUE = 0
