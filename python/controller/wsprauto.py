@@ -776,8 +776,8 @@ class Automate:
                 while True:
                     print('Waiting for WsprryPi to finish')
                     try:
-                        # Give it 2.5 minutes to close as cycles are 2 mins
-                        self.__wsprrypi_proc.wait(150)
+                        # Give it 4.0 minutes to close as cycles are 2 mins and we could wait 2 mins for the start
+                        self.__wsprrypi_proc.wait(245)
                         print('WsprryPi exited')
                         break
                     except subprocess.TimeoutExpired:
@@ -800,7 +800,7 @@ class Automate:
         
         """
         
-        if len(params != 2):
+        if len(params) != 2:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for FCD command %s!' % (params)
         
         subcommand = params[0]
