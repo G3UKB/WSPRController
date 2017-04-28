@@ -68,7 +68,12 @@ WSPR        = 'WSPR'        # Commands related to WSPR
 INVOKE      = 'INVOKE'      # Invoke WSPR if not running. Must be running before any other WSPR command.
 RESET       = 'RESET'       # Reset
 IDLE        = 'IDLE'        # Set idle on/off, i.e stop RX/TX
+
 BAND        = 'BAND'        # Set band for reporting
+B_160       = 'B-160'
+B_80        = 'B-80'
+B_40        = 'B-40'
+
 TX          = 'TX'          # Set TX to 20% or 0%
 POWER       = 'POWER'       # Adjust power output when using external radio TX
 CYCLES      = 'CYCLES'      # Wait for n receive cycles
