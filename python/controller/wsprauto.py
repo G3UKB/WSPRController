@@ -165,7 +165,7 @@ class Automate:
         WSPR    INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
                 RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
-                BAND, 160|80|40|...     # Set band for reporting
+                BAND, B-160 etc ...     # Set band for reporting
                 TX, on|off              # Set TX to 20% or 0%
                 POWER, nn.nn            # Adjust power output when using external radio TX
                 CYCLES, n               # Wait for n receive cycles
@@ -684,10 +684,10 @@ class Automate:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR BAND %s!' % (params)
             _, band = params
-            if band == B_160 or band == B_80 or band == B40:
+            if band in BAND_TO_EXTERNAL:
                 return self.__doWSPRBand(band)
             else:
-                return DISP_NONRECOVERABLE_ERROR, 'WSPR BAND command must be "B-160/B-80/B-40" %s!' % (params)
+                return DISP_NONRECOVERABLE_ERROR, 'WSPR BAND command must be "B-160,B-80 etc" %s!' % (params)
         elif subcommand == TX:
             return self.__doWSPRTx()
         elif subcommand == POWER:
