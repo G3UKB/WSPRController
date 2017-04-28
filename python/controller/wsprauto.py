@@ -170,14 +170,14 @@ class Automate:
                 POWER, nn.nn            # Adjust power output when using external radio TX
                 CYCLES, n               # Wait for n receive cycles
                 SPOT, on|off            # Set spotting on/off.
-        WSPRRY  WSPPRY_OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
-                WSPPRY_CALLSIGN, callsign      # Set callsign for tx data. Must be set before START.
-                WSPPRY_LOCATOR, locator        # Set locator for tx data. Must be set before START.
-                WSPPRY_PWR, power              # Set Tx power in dBm for tx data. Must be set before START.
-                WSPPRY_START, f1, f2, f3, ...  # Start WsprryPi with the given frequency sequence and settings.
-                WSPPRY_WAIT                    # Wait for WsprryPi to terminate
-                WSPPRY_KILL                    # Uncerimoneously kill WsprryPi (this may not work on Windows)
-                WSPPRY_STOP                    # Stop WsprryPI if running.
+        WSPRRY  WSPRRY_OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
+                WSPRRY_CALLSIGN, callsign      # Set callsign for tx data. Must be set before START.
+                WSPRRY_LOCATOR, locator        # Set locator for tx data. Must be set before START.
+                WSPRRY_PWR, power              # Set Tx power in dBm for tx data. Must be set before START.
+                WSPRRY_START, f1, f2, f3, ...  # Start WsprryPi with the given frequency sequence and settings.
+                WSPRRY_WAIT                    # Wait for WsprryPi to terminate
+                WSPRRY_KILL                    # Uncerimoneously kill WsprryPi (this may not work on Windows)
+                WSPRRY_STOP                    # Stop WsprryPI if running.
         FCD                             # Set FCDPro+ attributes using fcdctl program
                 FREQ, MHz               # Set the FCDPro+ frequency.
                 LNA, gain               # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
@@ -731,7 +731,7 @@ class Automate:
         """
         
         subcommand = params[0]
-        if subcommand == OPTIONS:
+        if subcommand == WSPRRY_OPTIONS:
             options = params[1:]
             optionStr = ''
             for n in range(len(options)-1):
@@ -739,37 +739,37 @@ class Automate:
                     optionStr = optionStr + options[n] + ','
                 else:
                     optionStr = optionStr + options[n]
-                self.__state[WSPPRY][WSPPRY_OPTIONS] = optionStr
+                self.__state[WSPRRY][WSPRRY_OPTIONS] = optionStr
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
-        elif subcommand == CALLSIGN:
+        elif subcommand == WSPRRY_CALLSIGN:
             if len(params) == 2:
                 _, callsign = params
-                self.__state[WSPPRY][WSPPRY_CALLSIGN] = callsign
+                self.__state[WSPRRY][WSPRRY_CALLSIGN] = callsign
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
-        elif subcommand == LOCATOR:
+        elif subcommand == WSPRRY_LOCATOR:
             if len(params) == 2:
                 _, locator = params
-                self.__state[WSPPRY][WSPPRY_LOCATOR] = locator
+                self.__state[WSPRRY][WSPRRY_LOCATOR] = locator
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
-        elif subcommand == PWR:
+        elif subcommand == WSPPRY_PWR:
             if len(params) == 2:
                 _, power = params
-                self.__state[WSPPRY][WSPPRY_POWER] = power
+                self.__state[WSPRRY][WSPRRY_POWER] = power
             else:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WsprryPi command %s!' % (params)
-        elif subcommand == START:
+        elif subcommand == WSPRRY_START:
             _, freqList = params
             # Construct parameter list
             p = []
             p.append(WSPRRYPI_PATH)
-            for option in self.__state[WSPPRY][WSPPRY_OPTIONS]:
+            for option in self.__state[WSPRRY][WSPRRY_OPTIONS]:
                 p.append(option)
-            p.append(self.__state[WSPPRY][WSPPRY_CALLSIGN])
-            p.append(self.__state[WSPPRY][WSPPRY_LOCATOR])
-            p.append(self.__state[WSPPRY][WSPPRY_PWR])
+            p.append(self.__state[WSPRRY][WSPRRY_CALLSIGN])
+            p.append(self.__state[WSPRRY][WSPRRY_LOCATOR])
+            p.append(self.__state[WSPRRY][WSPRRY_PWR])
             for freq in freqList:
                 p.append(freq)
             # Invoke WsprryPi
@@ -777,7 +777,7 @@ class Automate:
                 self.__wsprrypi_proc = subprocess.Popen(p)
             except Exception as e:
                 return DISP_NONRECOVERABLE_ERROR, 'Exception starting WsprryPi [%s]' % (str(e)) % (params)
-        elif subcommand == WAIT:
+        elif subcommand == WSPRRY_WAIT:
             if self.__wsprrypi_proc.poll():
                 while True:
                     print('Waiting for WsprryPi to finish')
@@ -790,7 +790,7 @@ class Automate:
                         self.__wsprrypi_proc.kill()
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for WsprryPi to terminate ... killing!'
                         break
-        elif subcommand == KILL:
+        elif subcommand == WSPRRY_KILL:
             if self.__wsprrypi_proc.poll():
                 self.__wsprrypi_proc.kill()
             

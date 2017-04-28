@@ -80,14 +80,14 @@ CYCLES      = 'CYCLES'      # Wait for n receive cycles
 SPOT        = 'SPOT'        # Set spotting on/off.
 
 WSPRRYPI            = 'WSPRRYPI'            # Commands related to WsprryPi
-WSPPRY_OPTIONS      = 'WSPPRY_OPTIONS'      # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
-WSPPRY_CALLSIGN     = 'WSPPRY_CALLSIGN'     # Set callsign for tx data. Must be set before START.
-WSPPRY_LOCATOR      = 'WSPPRY_LOCATOR'      # Set locator for tx data. Must be set before START.
-WSPPRY_PWR          = 'WSPPRY_PWR'          # Set Tx power in dBm for tx data. Must be set before START.
-WSPPRY_START        = 'WSPPRY_START'        # Start WsprryPi with the given frequency sequence and settings.
-WSPPRY_WAIT         = 'WSPPRY_WAIT'         # Wait for WsprryPi to terminate
-WSPPRY_KILL         = 'WSPPRY_KILL'         # Uncerimoneously kill WsprryPi (this may not work on Windows)
-WSPPRY_STOP         = 'WSPPRY_STOP'         # Stop WsprryPI if running.
+WSPRRY_OPTIONS      = 'WSPRRY_OPTIONS'      # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
+WSPRRY_CALLSIGN     = 'WSPRRY_CALLSIGN'     # Set callsign for tx data. Must be set before START.
+WSPRRY_LOCATOR      = 'WSPRRY_LOCATOR'      # Set locator for tx data. Must be set before START.
+WSPRRY_PWR          = 'WSPRRY_PWR'          # Set Tx power in dBm for tx data. Must be set before START.
+WSPRRY_START        = 'WSPRRY_START'        # Start WsprryPi with the given frequency sequence and settings.
+WSPRRY_WAIT         = 'WSPRRY_WAIT'         # Wait for WsprryPi to terminate
+WSPRRY_KILL         = 'WSPRRY_KILL'         # Uncerimoneously kill WsprryPi (this may not work on Windows)
+WSPRRY_STOP         = 'WSPRRY_STOP'         # Stop WsprryPI if running.
 
 FCD         = 'FCD'         # Commands related to the FunCubeDonglePro+
 FREQ        = 'FREQ'        # Set the FCDPro+ frequency.
