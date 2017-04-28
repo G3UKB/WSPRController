@@ -772,7 +772,7 @@ class Automate:
             except Exception as e:
                 return DISP_NONRECOVERABLE_ERROR, 'Exception starting WsprryPi [%s]' % (str(e)) % (params)
         elif subcommand == WSPRRY_WAIT:
-            if self.__wsprrypi_proc.poll():
+            if self.__wsprrypi_proc.poll() == None:
                 while True:
                     print('Waiting for WsprryPi to finish')
                     try:
@@ -785,7 +785,7 @@ class Automate:
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for WsprryPi to terminate ... killing!'
                         break
         elif subcommand == WSPRRY_KILL:
-            if self.__wsprrypi_proc.poll():
+            if self.__wsprrypi_proc.poll() == None:
                 self.__wsprrypi_proc.kill()
             
         return DISP_CONTINUE, None
