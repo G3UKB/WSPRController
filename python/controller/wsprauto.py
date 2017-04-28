@@ -673,7 +673,13 @@ class Automate:
         elif subcommand == RESET:
             return self.__doWSPRReset()            
         elif subcommand == IDLE:
-            return self.__doWSPRIdle()
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR %s!' % (params)
+            _, state = params
+            if state == 'on': state = True
+            elif state == 'off': state = False
+            else: return DISP_NONRECOVERABLE_ERROR, 'WSPR IDLE command must be "on" or "off" %s!' % (params)
+            return self.__doWSPRIdle(state)
         elif subcommand == BAND:
             return self.__doWSPRBand()
         elif subcommand == TX:
