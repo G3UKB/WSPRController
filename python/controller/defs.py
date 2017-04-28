@@ -79,7 +79,7 @@ POWER       = 'POWER'       # Adjust power output when using external radio TX
 CYCLES      = 'CYCLES'      # Wait for n receive cycles
 SPOT        = 'SPOT'        # Set spotting on/off.
 
-WSPRRYPI            = 'WSPRRYPI'            # Commands related to WsprryPi
+WSPRRY              = 'WSPRRY'            # Commands related to WsprryPi
 WSPRRY_OPTIONS      = 'WSPRRY_OPTIONS'      # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
 WSPRRY_CALLSIGN     = 'WSPRRY_CALLSIGN'     # Set callsign for tx data. Must be set before START.
 WSPRRY_LOCATOR      = 'WSPRRY_LOCATOR'      # Set locator for tx data. Must be set before START.
