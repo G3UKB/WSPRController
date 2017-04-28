@@ -247,7 +247,7 @@ class Automate:
             SEQ: [],
             CYCLES: [None, None],
             CAT: [None, None],
-            WSPPRY: [None, None, None]
+            WSPRRY: [None, None, None]
         }
         # {
         #     # Push down stack. If iterations nest, the new iteration is first in list.
@@ -259,7 +259,7 @@ class Automate:
         #     # CAT parameters
         #     CAT: [radio, baud],
         #     # WSPPRYPI fixed parameters
-        #     WSPPRY: [options, callsign, locator, power]            
+        #     WSPRRY: [options, callsign, locator, power]            
         # }
         
         # Set up a dispatch table for major commands
