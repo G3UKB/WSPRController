@@ -148,10 +148,10 @@
 #TDB
 
 # Loop tuning tests
-#LOOP: INIT, 10, 90, 20
-#LOOP: BAND, 160, 50
+#LOOP: LOOP_INIT, 10, 90, 20, 400
+#LOOP: LOOP_BAND, 160, 50
 #PAUSE: 2.0
-#LOOP: BAND, 80, 80
+#LOOP: LOOP_BAND, 80, 80
 #PAUSE: 2.0
 
 # Radio CAT tests
