@@ -272,12 +272,3 @@ ANTENNA_TO_LOOP_MATRIX = {
     A_LOOP_80:   {1: RELAY_ON, 2:RELAY_ON, 3: RELAY_OFF, 4: RELAY_OFF},
 }
 
-L_SETPOINTS = 'lsetpoints'
-L_BAND = 'lband'
-L_POSITION = 'lposition'
-
-ANTENNA_TO_LOOP_POSITION = {
-    #                       MAX, MIN            TUNE
-    A_LOOP_160: {L_SETPOINTS: (843, 73), L_BAND: (100, 150), L_POSITION: 129},
-    A_LOOP_80:  {L_SETPOINTS: (843, 73), L_BAND: (20, 80), L_POSITION: 46}
-}

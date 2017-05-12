@@ -639,16 +639,18 @@ class Automate:
             # Set the extension range
             self.__loopControl.setLowSetpoint(int(lowSetpoint))
             self.__loopControl.setHighSetpoint(int(highSetpoint))
+            self.__loopControl.setCapMaxSetpoint(int(highSetpoint))
+            self.__loopControl.setCapMinSetpoint(int(lowSetpoint))
             # Set the motor speed
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
             # speed value. 
             self.__loopControl.speed(int((float(motorSpeed)/100.0)* float(speedFactor)))
             return DISP_CONTINUE, None
         elif subcommand == LOOP_BAND: 
-            if len(params) != 2:
+            if len(params) != 3:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
-            _, band = params
-            return self.__doLoopTune(band)
+            _, antenna, extension = params
+            return self.__doLoopTune(antenna, extension)
     
     def __radio(self, params, index):
         """
@@ -1051,17 +1053,17 @@ class Automate:
         
         return DISP_CONTINUE, None
     
-    def __doLoop(self, antenna):            
+    def __doLoopTune(self, antenna, extension):            
         """
         Instruct the loop module to set and tune the selected loop
         
         Arguments:
             antenna       --  the internal antenna name for the loop
-            
+            extension     --  the % extension for the the band WSPR freq
         """
         
         if antenna == A_LOOP_160 or antenna == A_LOOP_80:
-            # Switch the relays to the 160 position
+            # Switch the relays to the selected antenna
             matrix = ANTENNA_TO_LOOP_MATRIX[antenna]
             for relay, state in matrix.items():
                 if state == RELAY_OFF: state = 0
@@ -1069,21 +1071,8 @@ class Automate:
                 self.__loopControl.setRelay((relay, state))
                 if not self.__loopEvt.wait(EVNT_TIMEOUT):
                     return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
-            # Set the motor and position parameters
-            self.__loopControl.setCapMaxSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][0])
-            if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to cap max change!'
-            self.__loopControl.setCapMinSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_SETPOINTS][1])
-            if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to cap min change!'
-            self.__loopControl.setLowSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
-            if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to low freq change!'
-            self.__loopControl.setHighSetpoint(ANTENNA_TO_LOOP_POSITION[antenna][L_BAND][0])
-            if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to high freq change!'
-            # Set the position for 160m or 80m WSPR dial frequency
-            self.__loopControl.move(ANTENNA_TO_LOOP_POSITION[antenna][L_POSITION])
+            # Set the position for antenna band WSPR dial frequency
+            self.__loopControl.move(extension)
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
         else:
