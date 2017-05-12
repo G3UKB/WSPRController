@@ -643,6 +643,7 @@ class Automate:
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
             # speed value. 
             self.__loopControl.speed(int((float(motorSpeed)/100.0)* float(speedFactor)))
+            return DISP_CONTINUE, None
         elif subcommand == LOOP_BAND: 
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
