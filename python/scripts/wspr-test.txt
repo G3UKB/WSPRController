@@ -107,7 +107,40 @@
 #FCD: STATUS
 
 # WSPR tests
-# TBD
+# Run app, not implemented
+#INVOKE
+# IDLE test
+#WSPR: IDLE, on
+#PAUSE: 1.0
+#WSPR: IDLE, off
+#PAUSE: 1.0
+#WSPR: IDLE, on
+#PAUSE: 1.0
+#WSPR: IDLE, off
+#PAUSE: 1.0
+# TX test
+#WSPR: TX, on
+#PAUSE: 1.0
+#WSPR: TX, off
+# POWER test
+#WSPR: POWER, 1.0
+#PAUSE: 3.0
+#WSPR: POWER, 10.0
+#PAUSE: 3.0
+# SPOT test
+#WSPR: SPOT, on
+#PAUSE: 1.0
+#WSPR: SPOT, off
+#PAUSE: 1.0
+# BAND test
+#WSPR: BAND, B_160
+#PAUSE: 1.0
+#WSPR: BAND, B_80
+#PAUSE: 1.0
+#WSPR: BAND, B_40
+#PAUSE: 1.0
+# Reset test
+#WSPR: RESET
 
 # Antenna switching tests
 #TDB
