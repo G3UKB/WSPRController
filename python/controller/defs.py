@@ -58,6 +58,8 @@ LPF_40      = 'LPF-40'
 
 ANTENNA     = 'ANTENNA'     # Commands related to antenna switching
 LOOP        = 'LOOP'        # Commands related to the loop switching and tuning
+LOOP_INIT   = 'LOOP_INIT'   # Initialise the loop system
+LOOP_BAND   = 'LOOP_BAND'   # Tune to the WSPR freq for the band
 
 RADIO       = 'RADIO'       # CAT commands to external radios
 CAT         = 'CAT'
@@ -279,6 +281,3 @@ ANTENNA_TO_LOOP_POSITION = {
     A_LOOP_160: {L_SETPOINTS: (843, 73), L_BAND: (100, 150), L_POSITION: 129},
     A_LOOP_80:  {L_SETPOINTS: (843, 73), L_BAND: (20, 80), L_POSITION: 46}
 }
-
-# Set slow to medium
-MOTOR_SPEED = 75

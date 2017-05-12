@@ -140,29 +140,31 @@ class Automate:
     
     Command lines:
       Control commands:
-        SEQ, n      # Iterate to END n times. If n is -1 iterate for ever.
-        ENDSEQ      # Loopback to last SEQ while iteration < n
-        TIME, start, end
+        SEQ: n      # Iterate to END n times. If n is -1 iterate for ever.
+        ENDSEQ:     # Loopback to last SEQ while iteration < n
+        TIME: start, end
                     # The commands banded by TIME and ENDTIME to be executed only between start, end time in hours
                     # 24 hour clock.
-        ENDTIME     SKIP to ENDTIME if time criteria not met
-        PAUSE, n.n  # Pause execution for n.n seconds
-        COMPLETE    # End of script
+        ENDTIME:     SKIP to ENDTIME if time criteria not met
+        PAUSE: n.n  # Pause execution for n.n seconds
+        COMPLETE:   # End of script
       Hardware commands:
-        LPF, band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
-        ANTENNA, source, dest
+        LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
+        ANTENNA: source, dest
                     # Sets up a route between an antenna and a destination TX or RX capability.
                     # e.g. 160-Loop, FCDPro+. Mapping is involved to relay activation.
-        LOOP, band, extension
+        LOOP: INIT, low_setpoint, high_setpoint, motor_speed, speed_factor
+                    # Initialise the loop tuner with offsets etc
+        LOOP: BAND, band, extension
                     # Switch the loop to band, and extend the actuator to % extension.
-        RADIO,  CAT, radio, com_port, baud_rate
+        RADIO:  CAT, radio, com_port, baud_rate
                     # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
                 FREQ, MHz
                     # Set the radio frequency to MHz using CAT
                 MODE, LSB|USB|...
                     # Set the radio mode using CAT
       Software commands:
-        WSPR    INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
+        WSPR:   INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
                 RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
                 BAND, B_160 etc ...     # Set band for reporting
@@ -170,7 +172,7 @@ class Automate:
                 POWER, nn.nn, nn.nn     # Available, required. Adjust power output when using external radio TX
                 CYCLES, n               # Wait for n receive cycles
                 SPOT, on|off            # Set spotting on/off.
-        WSPRRY  WSPRRY_OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
+        WSPRRY: WSPRRY_OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
                 WSPRRY_CALLSIGN, callsign      # Set callsign for tx data. Must be set before START.
                 WSPRRY_LOCATOR, locator        # Set locator for tx data. Must be set before START.
                 WSPRRY_PWR, power              # Set Tx power in dBm for tx data. Must be set before START.
@@ -178,7 +180,7 @@ class Automate:
                 WSPRRY_WAIT                    # Wait for WsprryPi to terminate
                 WSPRRY_KILL                    # Uncerimoneously kill WsprryPi (this may not work on Windows)
                 WSPRRY_STOP                    # Stop WsprryPI if running.
-        FCD                             # Set FCDPro+ attributes using fcdctl program
+        FCD:                            # Set FCDPro+ attributes using fcdctl program
                 FREQ, MHz               # Set the FCDPro+ frequency.
                 LNA, gain               # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
                 MIXER, gain             # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
@@ -227,11 +229,6 @@ class Automate:
         
         # Create the loop controller
         self.__loopControl = loopcontrol.LoopControl(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
-        # Allow full extension for the moment
-        self.__loopControl.setLowSetpoint(0)
-        self.__loopControl.setHighSetpoint(100)
-        # Low to medium speed
-        self.__loopControl.speed(MOTOR_SPEED)
         
         # Script sequence and current state
         self.__script = []
@@ -624,18 +621,33 @@ class Automate:
     
     def __loop(self, params, index):
         """
+        Init loop
         Select a band and tune the loop
         
         Arguments:
             params      --  params for this command
-                            band for loop
+                            sub-command dependent
             index       --  current index into command structure
         
         """
         
-        if len(params) != 1:
-            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
-        return self.__doLoop(params[0])
+        subcommand = params[0]
+        if subcommand == INIT:
+            if len(params) != 5:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop init %s!' % (params)
+            _, lowSetpoint, highSetpoint, motorSpeed, speedFactor = params
+            # Set the extension range
+            self.__loopControl.setLowSetpoint(int(lowSetpoint))
+            self.__loopControl.setHighSetpoint(int(highSetpoint))
+            # Set the motor speed
+            # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
+            # speed value. 
+            self.__loopControl.speed((motorSpeed/100)* speedFactor)
+        elif subcommand == BAND: 
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
+            _, band = params
+            return self.__doLoopTune(band)
     
     def __radio(self, params, index):
         """
@@ -919,7 +931,6 @@ class Automate:
         """
         
         # Change power level
-        availablePwr = self.__script[S_POWER]
         if power != availablePwr:
             powerdBm = self.__powertodbm(power)
             availablePwrdBm = self.__powertodbm(availablePwr)
