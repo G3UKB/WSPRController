@@ -632,7 +632,7 @@ class Automate:
         """
         
         subcommand = params[0]
-        if subcommand == INIT:
+        if subcommand == LOOP_INIT:
             if len(params) != 5:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop init %s!' % (params)
             _, lowSetpoint, highSetpoint, motorSpeed, speedFactor = params
@@ -643,7 +643,7 @@ class Automate:
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
             # speed value. 
             self.__loopControl.speed((motorSpeed/100)* speedFactor)
-        elif subcommand == BAND: 
+        elif subcommand == LOOP_BAND: 
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
             _, band = params
