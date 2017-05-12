@@ -167,7 +167,7 @@ class Automate:
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
                 BAND, B_160 etc ...     # Set band for reporting
                 TX, on|off              # Set TX to 20% or 0%
-                POWER, nn.nn            # Adjust power output when using external radio TX
+                POWER, nn.nn, nn.nn     # Available, required. Adjust power output when using external radio TX
                 CYCLES, n               # Wait for n receive cycles
                 SPOT, on|off            # Set spotting on/off.
         WSPRRY  WSPRRY_OPTIONS, option_list    # Selection of -p -s -f -r -x -o -t -n. Must be set before START.
@@ -693,14 +693,15 @@ class Automate:
             else: return DISP_NONRECOVERABLE_ERROR, 'WSPR TX command must be "on" or "off" %s!' % (params)
             return self.__doWSPRTx(state)
         elif subcommand == POWER:
-            if len(params) != 2:
+            if len(params) != 3:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR POWER %s!' % (params)
-            _, power = params
+            _, availablePower, requiredPower = params
             try:
-                power = float(power)
+                availablePower = float(availablePower)
+                requiredPower = float(requiredPower)
             except Exception as e:
                 return DISP_NONRECOVERABLE_ERROR, 'WSPR POWER command must be a float in watts %s!' % (params)
-            return self.__doWSPRPower(power)
+            return self.__doWSPRPower(availablePower, requiredPower)
         elif subcommand == CYCLES:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR CYCLES %s!' % (params)
@@ -907,12 +908,13 @@ class Automate:
         
         return DISP_CONTINUE, None
     
-    def __doWSPRPower(self, power):
+    def __doWSPRPower(self, availablePwr, power):
         """
         Instruct WSPR to set the TX power level
         
         Arguments:
-            power   --  watts
+            availablePwr    --  max power output from transmitter
+            power           --  required power output
             
         """
         
