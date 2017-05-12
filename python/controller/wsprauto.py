@@ -891,7 +891,7 @@ class Automate:
         
         return DISP_CONTINUE, None
              
-    def __doWSPRTx(self, tx, power):
+    def __doWSPRTx(self, tx):
         """
         Instruct WSPR to set the TX feature to 0% or 20%
         
@@ -900,23 +900,33 @@ class Automate:
             
         """
         
-        if tx:
-            cmd = 1
-            # Do any power correction
-            availablePwr = self.__script[S_POWER]
-            if power != availablePwr:
-                powerdBm = self.__powertodbm(power)
-                availablePwrdBm = self.__powertodbm(availablePwr)
-                diffdBm = availablePwrdBm - powerdBm
-                if diffdBm > 30: diffdBm = 30
-                self.__cmdSock.sendto(('power:%d' % diffdBm).encode('utf-8'), (CMD_IP, CMD_PORT))
-        else:
-            cmd = 0
+        if tx: cmd = 1
+        else: cmd = 0
         # Do TX command
         self.__cmdSock.sendto(('tx:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
         
         return DISP_CONTINUE, None
-       
+    
+    def __doWSPRPower(self, power):
+        """
+        Instruct WSPR to set the TX power level
+        
+        Arguments:
+            power   --  watts
+            
+        """
+        
+        # Change power level
+        availablePwr = self.__script[S_POWER]
+        if power != availablePwr:
+            powerdBm = self.__powertodbm(power)
+            availablePwrdBm = self.__powertodbm(availablePwr)
+            diffdBm = availablePwrdBm - powerdBm
+            if diffdBm > 30: diffdBm = 30
+            self.__cmdSock.sendto(('power:%d' % diffdBm).encode('utf-8'), (CMD_IP, CMD_PORT))
+    
+        return DISP_CONTINUE, None
+    
     def __doWSPRSpot(self, spot):
         """
         Instruct WSPR to set the spot feature on or off
