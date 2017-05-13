@@ -38,7 +38,7 @@ from defs import *
 # We need to pull in antennacontrol, loopcontrol and cat from the Common project
 sys.path.append(os.path.join('..','..','..','..','Common','trunk','python'))
 import antcontrol
-import loopcontrol
+import loop_control_if as loopcontrol
 import cat
 
 """
