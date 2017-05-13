@@ -640,15 +640,27 @@ class Automate:
             _, lowSetpoint, highSetpoint, motorSpeed, speedFactor = params
             # Set the extension range
             self.__loopControl.setLowSetpoint(int(lowSetpoint))
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setLowSetpoint to respond!'
             self.__loopControl.setHighSetpoint(int(highSetpoint))
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setHighSetpoint to respond!'
             self.__loopControl.setCapMaxSetpoint(int(highSetpoint))
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setCapMaxSetpoint to respond!'
             self.__loopControl.setCapMinSetpoint(int(lowSetpoint))
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setCapMinSetpoint to respond!'
             # We use an external analog ref voltage
             self.__loopControl.setAnalogRef(EXTERNAL)
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setAnalogRef to respond!'
             # Set the motor speed
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
             # speed value. 
             self.__loopControl.speed(int((float(motorSpeed)/100.0)* float(speedFactor)))
+            if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop speed to respond!'
             return DISP_CONTINUE, None
         elif subcommand == LOOP_BAND: 
             if len(params) != 3:
