@@ -639,25 +639,31 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop init %s!' % (params)
             _, lowSetpoint, highSetpoint, motorSpeed, speedFactor = params
             # Set the extension range
+            self.__loopEvt.clear()
             self.__loopControl.setLowSetpoint(int(lowSetpoint))
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setLowSetpoint to respond!'
+            self.__loopEvt.clear()
             self.__loopControl.setHighSetpoint(int(highSetpoint))
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setHighSetpoint to respond!'
+            self.__loopEvt.clear()
             self.__loopControl.setCapMaxSetpoint(int(highSetpoint))
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setCapMaxSetpoint to respond!'
+            self.__loopEvt.clear()
             self.__loopControl.setCapMinSetpoint(int(lowSetpoint))
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setCapMinSetpoint to respond!'
             # We use an external analog ref voltage
+            self.__loopEvt.clear()
             self.__loopControl.setAnalogRef(EXTERNAL)
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop setAnalogRef to respond!'
             # Set the motor speed
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
-            # speed value. 
+            # speed value.
+            self.__loopEvt.clear()
             self.__loopControl.speed(int((float(motorSpeed)/100.0)* float(speedFactor)))
             if not self.__loopEvt.wait(EVNT_TIMEOUT):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop speed to respond!'
@@ -1086,10 +1092,12 @@ class Automate:
                 for relay, state in matrix.items():
                     if state == RELAY_OFF: state = 0
                     else: state = 1
+                    self.__loopEvt.clear()
                     self.__loopControl.setRelay((relay, state))
                     if not self.__loopEvt.wait(EVNT_TIMEOUT):
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
                 # Set the position for antenna band WSPR dial frequency
+                self.__loopEvt.clear()
                 self.__loopControl.move(extension)
                 if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                     return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
