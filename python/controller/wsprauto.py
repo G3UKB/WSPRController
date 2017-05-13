@@ -152,11 +152,13 @@ class Automate:
         LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
         ANTENNA: source, dest
                     # Sets up a route between an antenna and a destination TX or RX capability.
-                    # e.g. 160-Loop, FCDPro+. Mapping is involved to relay activation.
-        LOOP: INIT, low_setpoint, high_setpoint, motor_speed, speed_factor
+                    # e.g. 160-80m-loop, FCDPro+. Mapping is involved to relay activation.
+                    # see defs.py ANTENNA_TO_INTERNAL for antenna constants
+        LOOP: INIT, % low_setpoint, % high_setpoint, % motor_speed, driver max speed_factor
                     # Initialise the loop tuner with offsets etc
-        LOOP: BAND, band, extension
+        LOOP: BAND, antenna, extension
                     # Switch the loop to band, and extend the actuator to % extension.
+                    # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
         RADIO:  CAT, radio, com_port, baud_rate
                     # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
                 FREQ, MHz
@@ -1062,7 +1064,7 @@ class Automate:
             extension     --  the % extension for the the band WSPR freq
         """
         
-        if antenna == A_LOOP_160 or antenna == A_LOOP_80:
+        if antenna == LOOP_160 or antenna == LOOP_80:
             # Switch the relays to the selected antenna
             matrix = ANTENNA_TO_LOOP_MATRIX[antenna]
             for relay, state in matrix.items():
