@@ -672,7 +672,7 @@ class Automate:
             if len(params) != 3:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
             _, antenna, extension = params
-            return self.__doLoopTune(antenna, extension)
+            return self.__doLoopTune(antenna, int(extension))
     
     def __radio(self, params, index):
         """
