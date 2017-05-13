@@ -1064,19 +1064,21 @@ class Automate:
             extension     --  the % extension for the the band WSPR freq
         """
         
-        if antenna == LOOP_160 or antenna == LOOP_80:
-            # Switch the relays to the selected antenna
-            matrix = ANTENNA_TO_LOOP_MATRIX[antenna]
-            for relay, state in matrix.items():
-                if state == RELAY_OFF: state = 0
-                else: state = 1
-                self.__loopControl.setRelay((relay, state))
-                if not self.__loopEvt.wait(EVNT_TIMEOUT):
-                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
-            # Set the position for antenna band WSPR dial frequency
-            self.__loopControl.move(extension)
-            if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
+        if antenna in ANTENNA_TO_LOOP_INTERNAL:
+            internalAntennaName = ANTENNA_TO_LOOP_INTERNAL[antenna]
+            if internalAntennaName == A_LOOP_160 or internalAntennaName == A_LOOP_80:
+                # Switch the relays to the selected antenna
+                matrix = ANTENNA_TO_LOOP_MATRIX[internalAntennaName]
+                for relay, state in matrix.items():
+                    if state == RELAY_OFF: state = 0
+                    else: state = 1
+                    self.__loopControl.setRelay((relay, state))
+                    if not self.__loopEvt.wait(EVNT_TIMEOUT):
+                        return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
+                # Set the position for antenna band WSPR dial frequency
+                self.__loopControl.move(extension)
+                if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
+                    return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
         else:
             return DISP_RECOVERABLE_ERROR, 'Unknown loop antenna %s' % (antenna)
         
