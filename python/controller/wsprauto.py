@@ -643,6 +643,8 @@ class Automate:
             self.__loopControl.setHighSetpoint(int(highSetpoint))
             self.__loopControl.setCapMaxSetpoint(int(highSetpoint))
             self.__loopControl.setCapMinSetpoint(int(lowSetpoint))
+            # We use an external analog ref voltage
+            self.__loopControl.setAnalogRef(EXTERNAL)
             # Set the motor speed
             # This is given in 0-100% and the factor is whatever the motor driver accepts as a maximum
             # speed value. 
