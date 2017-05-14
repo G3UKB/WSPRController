@@ -635,6 +635,8 @@ class Automate:
         
         subcommand = params[0]
         if subcommand == LOOP_INIT:
+            if not self.__loopControl.is_online():
+                return DISP_NONRECOVERABLE_ERROR, 'Loop controller is off-line!'
             if len(params) != 5:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop init %s!' % (params)
             _, lowSetpoint, highSetpoint, motorSpeed, speedFactor = params
@@ -1065,7 +1067,7 @@ class Automate:
             key = '%s:%s' % (antenna, sourceSink)
             matrix = ANTENNA_TO_SS_ROUTE[key]
             for relay, state in matrix.items():
-                if relay != RELAY_NA:
+                if state != RELAY_NA:
                     self.__antControl.set_relay(relay, state)
                     if not self.__relayEvt.wait(EVNT_TIMEOUT):
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for antenna changeover to respond to relay change!'
