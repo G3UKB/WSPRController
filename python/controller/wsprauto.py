@@ -1073,6 +1073,8 @@ class Automate:
                     self.__antControl.set_relay(relay, state)
                     if not self.__relayEvt.wait(EVNT_TIMEOUT):
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for antenna changeover to respond to relay change!'
+                    # ToDo, why do we need a long pause between switches, seems to be on relay 5 there is an issue
+                    sleep(2.0)
             self.__relayEvt.clear()
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception in antenna switching [%s]' % (str(e))
