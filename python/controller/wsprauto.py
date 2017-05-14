@@ -1069,10 +1069,11 @@ class Automate:
             matrix = ANTENNA_TO_SS_ROUTE[key]
             for relay, state in matrix.items():
                 if state != RELAY_NA:
+                    self.__relayEvt.clear()
                     self.__antControl.set_relay(relay, state)
                     if not self.__relayEvt.wait(EVNT_TIMEOUT):
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for antenna changeover to respond to relay change!'
-                    self.__relayEvt.clear()
+            self.__relayEvt.clear()
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception in antenna switching [%s]' % (str(e))
         
