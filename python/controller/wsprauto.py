@@ -228,9 +228,10 @@ class Automate:
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
-        
+        sleep(2.0)
         # Create the loop controller
         self.__loopControl = loopcontrol.ControllerAPI(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
+        sleep(2.0)
         
         # Script sequence and current state
         self.__script = []
