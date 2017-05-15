@@ -128,11 +128,10 @@ PIN_40_2 = 26   # Rly 4
 # CAT variants
 FT_817ND = 'FT-817ND'
 IC7100 = 'IC7100'
-CAT_VARIANTS = [FT_817ND, IC7100]
 
 # CAT settings
 CAT_SETTINGS = {
-    VARIANT: CAT_VARIANTS[0],
+    VARIANT: None,
     NETWORK: [
         # ip, port
         None, None

@@ -1151,11 +1151,9 @@ class Automate:
             else:
                 _, radio, baud, com = params
                 if radio == IC7100:
-                    CAT_SETTINGS[VARIANT] = CAT_VARIANTS[IC7100]
-                    radio = CAT_VARIANTS[IC7100]
+                    CAT_SETTINGS[VARIANT] = IC7100
                 elif  radio == FT_817ND:
-                    CAT_SETTINGS[VARIANT] = CAT_VARIANTS[FT_817ND]
-                    radio = CAT_VARIANTS[FT_817ND]
+                    CAT_SETTINGS[VARIANT] = FT_817ND
                 CAT_SETTINGS[SERIAL][0] = com
                 CAT_SETTINGS[SERIAL][1] = baud
                 self.__cat = cat.CAT(radio, CAT_SETTINGS)
