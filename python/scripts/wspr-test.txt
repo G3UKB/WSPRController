@@ -135,7 +135,7 @@
 
 # WSPR tests
 # Run app
-#INVOKE:
+#WSPR: INVOKE
 # IDLE test
 #WSPR: IDLE, on
 #PAUSE: 1.0
