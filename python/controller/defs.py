@@ -137,7 +137,7 @@ CAT_SETTINGS = {
     ],
     SERIAL: [
         #com port, baud rate
-        None, '19200'
+        None, None
     ],
     SELECT: CAT_SERIAL #CAT_UDP | CAT_SERIAL
 }

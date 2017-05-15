@@ -191,7 +191,9 @@
 #PAUSE: 2.0
 
 # Radio CAT tests
-#TBD
+#RADIO: CAT, Icom-7100, /dev/ttyACM0, 19200
+#RADIO: FREQ, 10.123
+#RADIO: MODE, usb
 
 # End of script requires a COMPLETE for a tidy termination
 COMPLETE:
