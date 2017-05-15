@@ -191,7 +191,7 @@
 #PAUSE: 2.0
 
 # Radio CAT tests
-#RADIO: CAT, Icom-7100, /dev/ttyACM0, 19200
+#RADIO: CAT, IC7100, /dev/ttyACM0, 19200
 #RADIO: FREQ, 10.123
 #RADIO: MODE, usb
 

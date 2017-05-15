@@ -712,7 +712,7 @@ class Automate:
         if len(params) < 2:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio %s!' % (params)
         
-        return doRadio(params)
+        return self.__doRadio(params)
     
     def __wspr(self, params, index):
         """
@@ -1145,17 +1145,17 @@ class Automate:
         """
         
         subCommand = params[0]
-        if subcommand == SC_COM:
+        if subCommand == CAT:
             if len(params) != 4:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
                 _, radio, baud, com = params
-                if radio == CAT_ICOM:
-                    CAT_SETTINGS[VARIENT] = CAT_VARIANTS[0]
-                    radio = CAT_VARIANTS[0]
-                else:
-                    CAT_SETTINGS[VARIENT] = CAT_VARIANTS[1]
-                    radio = CAT_VARIANTS[1]
+                if radio == IC7100:
+                    CAT_SETTINGS[VARIANT] = CAT_VARIANTS[IC7100]
+                    radio = CAT_VARIANTS[IC7100]
+                elif  radio == FT_817ND:
+                    CAT_SETTINGS[VARIANT] = CAT_VARIANTS[FT_817ND]
+                    radio = CAT_VARIANTS[FT_817ND]
                 CAT_SETTINGS[SERIAL][0] = com
                 CAT_SETTINGS[SERIAL][1] = baud
                 self.__cat = cat.CAT(radio, CAT_SETTINGS)
@@ -1164,7 +1164,7 @@ class Automate:
                 else:
                     return DISP_RECOVERABLE_ERROR, 'Failed to start CAT %s!' % (params)
                 self.__cat.set_callback(self.__catCallback)                
-        elif subcommand == SC_FREQ:
+        elif subcommand == FREQ:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
@@ -1175,7 +1175,7 @@ class Automate:
                 if not self.__catEvt.wait(EVNT_TIMEOUT*2):
                     return DISP_RECOVERABLE_ERROR, 'Timeout waiting for radio to respond to set frequency command!'
                 self.__catEvt.clear()            
-        elif subcommand == SC_MODE:
+        elif subcommand == MODE:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
