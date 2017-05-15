@@ -24,7 +24,8 @@
 # System imports
 import os, sys, socket, traceback
 import threading
-import subprocess 
+import subprocess
+import signal
 from time import sleep
 import datetime
 import math
@@ -225,6 +226,7 @@ class Automate:
         self.__waitingBandNo = None
         self.__catRunning = False
         self.__wsprrypi_proc = None
+        self.__WSPRProc = None
         self.__cat  = None
         self.__loopControl = None
         
@@ -316,6 +318,7 @@ class Automate:
         self.__eventThrd.join()
         if self.__cat != None: self.__cat.terminate()
         if self.__loopControl != None: self.__loopControl.terminate()
+        if self.__WSPRProc != None: self.__WSPRProc.send_signal(signal.SIGTERM)
     
     # =================================================================================
     # Main processing     
@@ -726,7 +729,15 @@ class Automate:
 
         subcommand = params[0]
         if subcommand == INVOKE:
-            pass
+            if self.__WSPRProc == None:
+                # Process not running, so start
+                self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=WSPR_PATH, stdout=PIPE, stderr=STDOUT)
+                sleep(1.0)
+            else:
+                if self.__WSPRProc.poll() != None:
+                    # Process was running but has terminated, so restart
+                    self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=WSPR_PATH, stdout=PIPE, stderr=STDOUT)
+                    sleep(1.0)
         elif subcommand == RESET:
             return self.__doWSPRReset()            
         elif subcommand == IDLE:

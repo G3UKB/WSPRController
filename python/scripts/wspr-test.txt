@@ -134,13 +134,9 @@
 #FCD: STATUS
 
 # WSPR tests
-# Run app, not implemented
-#INVOKE
+# Run app
+#INVOKE:
 # IDLE test
-#WSPR: IDLE, on
-#PAUSE: 1.0
-#WSPR: IDLE, off
-#PAUSE: 1.0
 #WSPR: IDLE, on
 #PAUSE: 1.0
 #WSPR: IDLE, off
