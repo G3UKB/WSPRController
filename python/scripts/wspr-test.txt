@@ -162,7 +162,7 @@
 #WSPR: BAND, B_80
 #PAUSE: 1.0
 #WSPR: BAND, B_40
-#PAUSE: 1.0
+#PAUSE: 5.0
 # Reset test
 #WSPR: RESET
 
