@@ -738,6 +738,7 @@ class Automate:
                     # Process was running but has terminated, so restart
                     self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=WSPR_PATH, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     sleep(1.0)
+            return DISP_CONTINUE, None
         elif subcommand == RESET:
             return self.__doWSPRReset()            
         elif subcommand == IDLE:
