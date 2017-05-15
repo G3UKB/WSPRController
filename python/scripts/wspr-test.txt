@@ -99,6 +99,10 @@
 #TIME: 00, 23
 #MSG: Triggered
 #ENDTIME:
+#MSG: 00-00 24 hours
+#TIME: 00, 00
+#MSG: Triggered
+#ENDTIME:
 
 
 # LPF test

@@ -527,6 +527,7 @@ class Automate:
         
         # Is current time within timespan
         currentHour = datetime.datetime.now().hour
+        runSection = False
         if (startHour == 0 and stopHour == 0):
             # This means all day, although absence of a time command does the same thing
             runSection = True
