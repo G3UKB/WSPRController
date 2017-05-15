@@ -136,6 +136,7 @@
 # WSPR tests
 # Run app
 #WSPR: INVOKE
+#PAUSE: 5.0
 # IDLE test
 #WSPR: IDLE, on
 #PAUSE: 1.0
@@ -148,7 +149,7 @@
 # POWER test
 #WSPR: POWER, 10.0, 1.0
 #PAUSE: 3.0
-#WSPR: POWER, 10,0, 5.0
+#WSPR: POWER, 10.0, 5.0
 #PAUSE: 3.0
 # SPOT test
 #WSPR: SPOT, on
