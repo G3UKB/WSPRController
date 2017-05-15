@@ -1149,7 +1149,7 @@ class Automate:
             if len(params) != 4:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
-                _, radio, baud, com = params
+                _, radio, com, baud = params
                 if radio == IC7100:
                     CAT_SETTINGS[VARIANT] = IC7100
                 elif  radio == FT_817ND:
