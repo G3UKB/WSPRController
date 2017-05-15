@@ -731,12 +731,12 @@ class Automate:
         if subcommand == INVOKE:
             if self.__WSPRProc == None:
                 # Process not running, so start
-                self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=subprocess.WSPR_PATH, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=WSPR_PATH, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 sleep(1.0)
             else:
                 if self.__WSPRProc.poll() != None:
                     # Process was running but has terminated, so restart
-                    self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=subprocess.WSPR_PATH, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    self.__WSPRProc = subprocess.Popen(['python3', 'wspr'], cwd=WSPR_PATH, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     sleep(1.0)
         elif subcommand == RESET:
             return self.__doWSPRReset()            
