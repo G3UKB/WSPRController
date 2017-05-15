@@ -1144,8 +1144,8 @@ class Automate:
             
         """
         
-        subCommand = params[0]
-        if subCommand == CAT:
+        subcommand = params[0]
+        if subcommand == CAT:
             if len(params) != 4:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
