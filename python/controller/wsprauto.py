@@ -127,6 +127,7 @@ class Automate:
         TIME        # Start a time banded section
         ENDTIME     # End a time banded section
         PAUSE       # Pause the script file
+        MSG         # Output a message to the console
         COMPLETE    # Script complete
       Hardware commands:
         LPF         # Commands related to the LPF filters
@@ -147,6 +148,7 @@ class Automate:
                     # 24 hour clock.
         ENDTIME:     SKIP to ENDTIME if time criteria not met
         PAUSE: n.n  # Pause execution for n.n seconds
+        MSG: message# Output the message
         COMPLETE:   # End of script
       Hardware commands:
         LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
@@ -270,6 +272,7 @@ class Automate:
             'TIME':  self.__starttime,
             'ENDTIME':  self.__stoptime,
             'PAUSE':  self.__pause,
+            'MSG':  self.__message,
             'LPF':  self.__lpf,
             'ANTENNA':  self.__antenna,
             'LOOP':  self.__loop,
@@ -579,6 +582,20 @@ class Automate:
         sleep(float(delay))
         return DISP_CONTINUE, None
     
+    def __message(self, params, index):
+        """
+        Output a message
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
+        message, = params
+        print(message)
+        return DISP_CONTINUE, None
+
     def __lpf(self, params, index):
         """
         Select a low pass filter

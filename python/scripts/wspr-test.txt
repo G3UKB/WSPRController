@@ -11,6 +11,7 @@
 #        TIME        # Start a time banded section
 #        ENDTIME     # End a time banded section
 #        PAUSE       # Pause the script file
+#        MSG         # Output a message to the console
 #        COMPLETE    # Script complete
 #      Hardware commands:
 #        LPF         # Commands related to the LPF filters
@@ -31,6 +32,7 @@
 #                    # 24 hour clock.
 #        ENDTIME:     SKIP to ENDTIME if time criteria not met
 #        PAUSE: n.n  # Pause execution for n.n seconds
+#        MSG: message# Output the message
 #        COMPLETE:   # End of script
 #      Hardware commands:
 #        LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
@@ -80,7 +82,24 @@
 #ENDSEQ:
 
 # Time banded tests
-#TDB
+#MSG: Timeband test
+#MSG: 10-11
+#TIME: 10, 11
+#MSG: Triggered
+#ENDTIME
+#MSG: 11-12
+#TIME: 10, 11
+#MSG: Triggered
+#ENDTIME
+#MSG: 12-13
+#TIME: 12, 13
+#MSG: Triggered
+#ENDTIME
+#MSG: 00-23
+#TIME: 00, 23
+#MSG: Triggered
+#ENDTIME
+
 
 # LPF test
 # Switch in each LPF filter in turn with a 2s pause between each

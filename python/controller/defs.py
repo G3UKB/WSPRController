@@ -49,6 +49,7 @@ ENDSEQ      = 'ENDSEQ'      # End of loop
 TIME        = 'TIME'        # Start a time banded section
 ENDTIME     = 'ENDTIME'     # End a time banded section
 PAUSE       = 'PAUSE'       # Pause the script file
+MSG         = 'MSG'         # Output a message
 COMPLETE    = 'COMPLETE'    # Script complete
 
 LPF         = 'LPF'         # Commands related to the LPF filters
