@@ -47,8 +47,8 @@
 #                    # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
 #        RADIO:  CAT, radio, com_port, baud_rate
 #                    # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
-#                FREQ, MHz
-#                    # Set the radio frequency to MHz using CAT
+#        BAND, MHz
+#                    # Set the radio frequency to the WSPR frequency for BAND using CAT
 #                MODE, LSB|USB|...
 #                    # Set the radio mode using CAT
 #      Software commands:
@@ -192,7 +192,7 @@
 
 # Radio CAT tests
 #RADIO: CAT, IC7100, /dev/ttyACM0, 19200
-#RADIO: FREQ, 10.123
+#RADIO: BAND, B_160
 #RADIO: MODE, usb
 
 # End of script requires a COMPLETE for a tidy termination

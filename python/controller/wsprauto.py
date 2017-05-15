@@ -163,8 +163,8 @@ class Automate:
                     # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
         RADIO:  CAT, radio, com_port, baud_rate
                     # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
-                FREQ, MHz
-                    # Set the radio frequency to MHz using CAT
+                BAND, MHz
+                    # Set the radio frequency to the WSPR frequency for BAND using CAT
                 MODE, LSB|USB|...
                     # Set the radio mode using CAT
       Software commands:
