@@ -520,6 +520,8 @@ class Automate:
         if len(params) != 2:
             return DISP_RECOVERABLE_ERROR, 'Wrong number of parameters for time section %s ... skipping section' % (params)
         startHour, stopHour = params
+        startHour = int(startHour)
+        stopHour = int(stopHour)
         if (startHour < 0 or startHour > 23) or (stopHour < 0 or stopHour > 23):
             return DISP_RECOVERABLE_ERROR, 'Invalid parameters for time section %s ... skipping section' % (params)
         

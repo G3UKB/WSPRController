@@ -86,19 +86,19 @@
 #MSG: 10-11
 #TIME: 10, 11
 #MSG: Triggered
-#ENDTIME
+#ENDTIME:
 #MSG: 11-12
 #TIME: 10, 11
 #MSG: Triggered
-#ENDTIME
+#ENDTIME:
 #MSG: 12-13
 #TIME: 12, 13
 #MSG: Triggered
-#ENDTIME
+#ENDTIME:
 #MSG: 00-23
 #TIME: 00, 23
 #MSG: Triggered
-#ENDTIME
+#ENDTIME:
 
 
 # LPF test
