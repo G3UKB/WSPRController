@@ -88,11 +88,11 @@
 #MSG: Triggered
 #ENDTIME:
 #MSG: 11-12
-#TIME: 10, 11
+#TIME: 11, 12
 #MSG: Triggered
 #ENDTIME:
-#MSG: 12-13
-#TIME: 12, 13
+#MSG: 12-14
+#TIME: 12, 14
 #MSG: Triggered
 #ENDTIME:
 #MSG: 00-23

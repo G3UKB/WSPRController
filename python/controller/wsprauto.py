@@ -542,7 +542,7 @@ class Automate:
                     runSection = True
         else:
             # Normal progression
-            if startHour <= currentHour and stopHour >= currentHour:
+            if currentHour >= startHour and stopHour > currentHour:
                 runSection = True
         
         # Decision time
@@ -556,6 +556,7 @@ class Automate:
                 commandLine = self.__script[index]
                 if commandLine[0] == ENDTIME:
                     return DISP_NEW_INDEX, index + 1
+                index += 1
             # oops, didn't find the ENDTIME
             return DISP_NONRECOVERABLE_ERROR, 'Reached end of commands without finding an ENDTIME command!'      
     
