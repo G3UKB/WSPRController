@@ -1162,7 +1162,7 @@ class Automate:
                 else:
                     return DISP_RECOVERABLE_ERROR, 'Failed to start CAT %s!' % (params)
                 self.__cat.set_callback(self.__catCallback)                
-        elif subcommand == FREQ:
+        elif subcommand == BAND:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
