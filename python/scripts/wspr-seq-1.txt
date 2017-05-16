@@ -79,11 +79,13 @@ MSG: Starting WSPR script
 
 MSG: Initialise WSPR program
 WSPR: INVOKE
+PAUSE: 5
 MSG: WSPR 'IDLE off, TX off, POWER 100mW (external radio), SPOT off
 WSPR: IDLE, on
 WSPR: TX, off
 WSPR: POWER, 10.0, 0.1
 WSPR: SPOT, off
+PAUSE: 5
 
 MSG: Initialise WsprryPi
 MSG: WsprryPi 'self calibration + random freq offset, G3UKB, IO92wf, 10dBm'
@@ -102,6 +104,8 @@ FCD: LNA, off
 FCD: MIXER, off
 FCD: IF, 0
 
+PAUSE: 5
+
 MSG: Iterate sequence for ever, requires Ctrl C to terminate
 SEQ: -1
 
@@ -109,7 +113,7 @@ MSG: Run WsprryPi TX on 160m
 MSG: Set antenna route 'loop to pi'
 ANTENNA: A_LOOP, SS_WSPRRYPI
 MSG: Tune loop for 160m WSPR frequency
-LOOP : LOOP_BAND, LOOP-160, 50
+LOOP: LOOP_BAND, LOOP-160, 50
 MSG: Set LPF to 160m
 LPF: LPF_160
 MSG: Run one TX sequence followed by 1 transmission gap
