@@ -92,7 +92,7 @@ MSG: WsprryPi 'self calibration + random freq offset, G3UKB, IO92wf, 10dBm'
 WSPRRY: WSPRRY_OPTIONS, -s, -o
 WSPRRY: WSPRRY_CALLSIGN, G3UKB
 WSPRRY: WSPRRY_LOCATOR, IO92wf
-WSPRRY: WSPRRY_POWER, 10
+WSPRRY: WSPRRY_PWR, 10
 
 MSG: Initialise Loop Controller
 MSG: Loop 'Min 20, Max 900, Speed 40%, Speed factor 400'

@@ -848,7 +848,7 @@ class Automate:
             try:
                 self.__wsprrypi_proc = subprocess.Popen(p)
             except Exception as e:
-                return DISP_NONRECOVERABLE_ERROR, 'Exception starting WsprryPi [%s]' % (str(e)) % (params)
+                return DISP_NONRECOVERABLE_ERROR, 'Exception starting WsprryPi [%s]' % (str(e))
         elif subcommand == WSPRRY_WAIT:
             if self.__wsprrypi_proc != None:
                 if self.__wsprrypi_proc.poll() == None:
