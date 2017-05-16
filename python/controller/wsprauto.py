@@ -345,10 +345,13 @@ class Automate:
                 self.__script.append([])
                 self.__script[index].append(cmd)
                 self.__script[index].append([])
-                if len(remainder) > 0:
-                    toks = remainder.split(',')
-                    for tok in toks:
-                        self.__script[index][1].append(tok.strip())
+                if cmd == MSG:
+                    self.__script[index][1].append(remainder)
+                else:
+                    if len(remainder) > 0:
+                        toks = remainder.split(',')
+                        for tok in toks:
+                            self.__script[index][1].append(tok.strip())
                 index += 1
         except Exception as e:
             print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
