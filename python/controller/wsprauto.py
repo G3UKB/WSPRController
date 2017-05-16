@@ -892,7 +892,7 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Unknown band %s for FCD command' % (band)
             wsprFreq = BAND_TO_FREQ[band]
             fcdFreq = wsprFreq - FCD_IF            
-            p.append(fcdFreq)
+            p.append(str(fcdFreq))
         elif subcommand == LNA:
             _ , gain = params
             if gain == 'on': gain = '1'
