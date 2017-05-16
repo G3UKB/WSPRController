@@ -214,6 +214,9 @@ BAND_TO_FREQ = {
     B_2:     144.4890,          
 }
 
+# Offset to account for FCD IF of 12KHz
+FCD_IF = 0.012
+
 # ===============================================================================
 # Antenna definitions
 # Note this depends on what you have available and what switching arrangement you have

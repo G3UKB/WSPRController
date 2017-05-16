@@ -186,7 +186,7 @@ class Automate:
                 WSPRRY_KILL                    # Uncerimoneously kill WsprryPi (this may not work on Windows)
                 WSPRRY_STOP                    # Stop WsprryPI if running.
         FCD:                            # Set FCDPro+ attributes using fcdctl program
-                FREQ, MHz               # Set the FCDPro+ frequency.
+                BAND, band              # Set the FCDPro+ frequency to the WSPR band + IF offset.
                 LNA, gain               # Set the FCDPro+ LNA gain, 0 == off, 1 == on.
                 MIXER, gain             # Set the FCDPro+ MIXER gain, 0 == off, 1 == on.
                 IF, gain                # Set the FCDPro+ IF gain, 0-59 dB.
@@ -882,10 +882,13 @@ class Automate:
         p = [FCDCTL_PATH,]
         
         # fcdctl is a command line program which should execute the command and exit.
-        if subcommand == FREQ:
-            _ , freq = params
-            p.append('-f')
-            p.append(freq)
+        if subcommand == BAND:
+            _ , band = params
+            if band not in BAND_TO_FREQ:
+                return DISP_NONRECOVERABLE_ERROR, 'Unknown band %s for FCD command' % (band)
+            wsprFreq = BAND_TO_FREQ[band]
+            fcdFreq = wsprFreq - FCD_IF            
+            p.append(fcdFreq)
         elif subcommand == LNA:
             _ , gain = params
             if gain == 'on': gain = '1'

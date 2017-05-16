@@ -45,9 +45,9 @@
 #        LOOP: BAND, antenna, extension
 #                    # Switch the loop to band, and extend the actuator to % extension.
 #                    # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
-#        RADIO:  CAT, radio, com_port, baud_rate
+#        RADIO: CAT, radio, com_port, baud_rate
 #                    # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
-#        BAND, MHz
+#                BAND, MHz
 #                    # Set the radio frequency to the WSPR frequency for BAND using CAT
 #                MODE, LSB|USB|...
 #                    # Set the radio mode using CAT
@@ -75,122 +75,77 @@
 #                IF, gain                # Set the FCDPro+ IF gain, 0-59 dB.
 #                STATUS                  # Show status
 
-# SEQ test
-# Iterate 10 timesd with a pause of 1s between iterations
-#SEQ: 10
-#PAUSE: 1.0
-#ENDSEQ:
+MSG: Starting WSPR script
 
-# Time banded tests
-#MSG: Timeband test
-#MSG: 10-11
-#TIME: 10, 11
-#MSG: Triggered
-#ENDTIME:
-#MSG: 11-12
-#TIME: 11, 12
-#MSG: Triggered
-#ENDTIME:
-#MSG: 12-14
-#TIME: 12, 14
-#MSG: Triggered
-#ENDTIME:
-#MSG: 00-23
-#TIME: 00, 23
-#MSG: Triggered
-#ENDTIME:
-#MSG: 00-00 24 hours
-#TIME: 00, 00
-#MSG: Triggered
-#ENDTIME:
+MSG: Initialise WSPR program
+WSPR: INVOKE
+MSG: WSPR 'IDLE off, TX off, POWER 100mW (external radio), SPOT off
+WSPR: IDLE, on
+WSPR: TX, off
+WSPR: POWER, 10.0, 0.1
+WSPR: SPOT, off
 
+MSG: Initialise WsprryPi
+MSG: WsprryPi 'self calibration + random freq offset, G3UKB, IO92wf, 10dBm'
+WSPRRY: WSPRRY_OPTIONS, -s, -o
+WSPRRY: WSPRRY_CALLSIGN, G3UKB
+WSPRRY: WSPRRY_LOCATOR, IO92wf
+WSPRRY: WSPRRY_POWER, 10
 
-# LPF test
-# Switch in each LPF filter in turn with a 2s pause between each
-#LPF: LPF-160
-#PAUSE: 2.0
-#LPF: LPF-80
-#PAUSE: 2.0
-#LPF: LPF-40
-#PAUSE: 2.0
+MSG: Initialise Loop Controller
+MSG: Loop 'Min 20, Max 900, Speed 40%, Speed factor 400'
+LOOP: LOOP_INIT, 20, 900, 40, 400
 
-# WsprryPi test
-# Set options, callsign, locator and power
-#WSPRRY: WSPRRY_OPTIONS, -s, -o
-#WSPRRY: WSPRRY_CALLSIGN, G3UKB
-#WSPRRY: WSPRRY_LOCATOR, IO92wf
-#WSPRRY: WSPRRY_PWR, 10
-# Start with the above and frequency list
-#WSPRRY: WSPRRY_START, 160m, 0
-# Wait for WsprryPi to exit before continuing
-#WSPRRY: WSPRRY_WAIT
+MSG: Initialise FCDPro+
+MSG: Set all gains to minimum
+FCD: LNA, off
+FCD: MIXER, off
+FCD: IF, 0
 
-# FCDPro+ test
-# Turn on all gains, set freq and display status
-#FCD: LNA, on
-#FCD: MIXER, on
-#FCD: IF, 50
-#FCD: BAND, B-40
-#FCD: STATUS
+MSG: Iterate sequence for ever, requires Ctrl C to terminate
+SEQ: -1
 
-# WSPR tests
-# Run app
-#WSPR: INVOKE
-#PAUSE: 5.0
-# IDLE test
-#WSPR: IDLE, on
-#PAUSE: 1.0
-#WSPR: IDLE, off
-#PAUSE: 1.0
-# TX test
-#WSPR: TX, on
-#PAUSE: 1.0
-#WSPR: TX, off
-# POWER test
-#WSPR: POWER, 10.0, 1.0
-#PAUSE: 3.0
-#WSPR: POWER, 10.0, 5.0
-#PAUSE: 3.0
-# SPOT test
-#WSPR: SPOT, on
-#PAUSE: 1.0
-#WSPR: SPOT, off
-#PAUSE: 1.0
-# BAND test
-#WSPR: BAND, B_160
-#PAUSE: 1.0
-#WSPR: BAND, B_80
-#PAUSE: 1.0
-#WSPR: BAND, B_40
-#PAUSE: 5.0
-# Reset test
-#WSPR: RESET
+MSG: Run WsprryPi TX on 160m
+MSG: Set antenna route 'loop to pi'
+ANTENNA: A_LOOP, SS_WSPRRYPI
+MSG: Tune loop for 160m WSPR frequency
+LOOP : LOOP_BAND, LOOP-160, 50
+MSG: Set LPF to 160m
+LPF: LPF_160
+MSG: Run one TX sequence followed by 1 transmission gap
+MSG: Wait for completion if still running
+WSPRRY: WSPRRY_WAIT
+WSPRRY: WSPRRY_START, 160m, 0
 
-# Antenna switching tests
-#ANTENNA: A_EFD_80_10, SS_FCD_PRO_PLUS
-#PAUSE: 2.0
-#ANTENNA: A_EFD_80_10, SS_WSPRRYPI
-#PAUSE: 2.0
-#ANTENNA: A_EFD_80_10, SS_IC7100
-#PAUSE: 2.0
-#ANTENNA: A_LOOP, SS_WSPRRYPI
-#PAUSE: 2.0
-#ANTENNA: A_LOOP, SS_FCD_PRO_PLUS
-#PAUSE: 2.0
-#ANTENNA: A_LOOP, SS_IC7100
-#PAUSE: 2.0
+MSG: Run WSPR RX using FCDPro+ IQ on 80m
+MSG: Set antenna route 'EFD to FCDPro+
+ANTENNA: A_EFD_80_10, SS_FCD_PRO_PLUS
+MSG: The frequency offset is automatic for the selected band WSPR frequency
+FCD: BAND, B80
+MSG: Set WSPR running on 80m. WSPR details and IQ input must be pre-selected.
+MSG: Idle off, spot on, band 80m (switching will occure when idle)
+WSPR: IDLE, off
+WSPR: SPOT, on
+WSPR: BAND, B80
 
-# Loop tuning tests
-#LOOP: LOOP_INIT, 10, 900, 40, 400
-#LOOP: LOOP_BAND, LOOP-160, 50
-#PAUSE: 2.0
-#LOOP: LOOP_BAND, LOOP-80, 80
-#PAUSE: 2.0
+MSG: Run WsprryPi TX on 80m
+MSG: Set antenna route 'loop to pi'
+ANTENNA: A_LOOP, SS_WSPRRYPI
+MSG: Tune loop for 80m WSPR frequency
+LOOP : LOOP_BAND, LOOP-80, 80
+MSG: Set LPF to 80m
+LPF: LPF_80
+MSG: Run one TX sequence followed by 1 transmission gap
+MSG: Wait for completion if still running
+WSPRRY: WSPRRY_WAIT
+WSPRRY: WSPRRY_START, 80m, 0
 
-# Radio CAT tests
-#RADIO: CAT, IC7100, /dev/ttyACM0, 19200
-#RADIO: BAND, B_160
-#RADIO: MODE, usb
+MSG: Run WSPR RX using FCDPro+ IQ on 40m
+MSG: The frequency offset is automatic for the selected band WSPR frequency
+FCD: BAND, B40
+MSG: Set WSPR running on 40m. WSPR details and IQ input must be pre-selected.
+MSG: Band 40m (switching will occure when idle)
+WSPR: BAND, B40
 
-# End of script requires a COMPLETE for a tidy termination
+ENDSEQ:
 COMPLETE:
