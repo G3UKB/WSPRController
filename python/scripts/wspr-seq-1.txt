@@ -130,7 +130,7 @@ MSG: Set WSPR running on 80m. WSPR details and IQ input must be pre-selected.
 MSG: Idle off, spot on, band 80m (switching will occure when idle)
 WSPR: IDLE, off
 WSPR: SPOT, on
-WSPR: BAND, B80
+WSPR: BAND, B_80
 
 MSG: Run WsprryPi TX on 80m
 MSG: Set antenna route 'loop to pi'
@@ -149,7 +149,7 @@ MSG: The frequency offset is automatic for the selected band WSPR frequency
 FCD: BAND, B_40
 MSG: Set WSPR running on 40m. WSPR details and IQ input must be pre-selected.
 MSG: Band 40m (switching will occure when idle)
-WSPR: BAND, B40
+WSPR: BAND, B_40
 
 ENDSEQ:
 COMPLETE:
