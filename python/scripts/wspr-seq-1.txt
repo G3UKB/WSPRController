@@ -145,7 +145,7 @@ WSPR: BAND, B_80
 MSG: Band switch completed
 WSPR: SPOT, on
 MSG: Wait for 3 RX cycles
-WSPR: CYCLES: 3
+WSPR: CYCLES, 3
 
 MSG:
 MSG:
@@ -157,7 +157,7 @@ MSG: Band switch completed
 MSG: Set FCDPro+ frequency. The frequency offset is automatic for the selected band WSPR frequency
 FCD: BAND, B_40
 MSG: Wait for 3 RX cycles
-WSPR: CYCLES: 3
+WSPR: CYCLES, 3
 
 MSG:
 MSG:
