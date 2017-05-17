@@ -229,6 +229,7 @@ class Automate:
         self.__WSPRProc = None
         self.__cat  = None
         self.__loopControl = None
+        self.__wsprTx = False
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -764,10 +765,10 @@ class Automate:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR TX %s!' % (params)
             _, state = params
-            if state == 'on': state = True
-            elif state == 'off': state = False
+            if state == 'on': self.__wsprTx = True
+            elif state == 'off': self.__wsprTx = False
             else: return DISP_NONRECOVERABLE_ERROR, 'WSPR TX command must be "on" or "off" %s!' % (params)
-            return self.__doWSPRTx(state)
+            return self.__doWSPRTx(self.__wsprTx)
         elif subcommand == POWER:
             if len(params) != 3:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR POWER %s!' % (params)
@@ -783,10 +784,10 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR CYCLES %s!' % (params)
             _, cycles = params
             try:
-                cycles = int(power)
+                cycles = int(cycles)
             except Exception as e:
                 return DISP_NONRECOVERABLE_ERROR, 'WSPR CYCLES command must be a int %s!' % (params)
-            return self.__doWSPRCycles(cycles)
+            return self.__doWSPRCycles(cycles, self.__doWSPRTx)
         elif subcommand == SPOT:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR SPOT %s!' % (params)
@@ -1038,7 +1039,6 @@ class Automate:
         # Calculate the total timeout for the number of cycles
         # Add extra as we could be idle waiting to start
         txtime = 0
-        cycles = int(cycles)
         if tx: txtime = (EVNT_TIMEOUT * 24) * cycles/5
         timeout = int((EVNT_TIMEOUT * 24 * cycles) + txtime)
         # Give a generous amount as we have waiting periods to account for
