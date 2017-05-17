@@ -211,7 +211,7 @@ BAND_TO_FREQ = {
     B_10:    28.1246,
     B_6:     50.2930,
     B_4:     70.0286,
-    B_2:     144.4890,          
+    B_2:     144.4885,          
 }
 
 # Offset to account for FCD IF of 12KHz

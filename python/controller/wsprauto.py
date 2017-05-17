@@ -346,7 +346,7 @@ class Automate:
                 self.__script[index].append(cmd)
                 self.__script[index].append([])
                 if cmd == MSG:
-                    self.__script[index][1].append(remainder)
+                    self.__script[index][1].append(remainder.strip())
                 else:
                     if len(remainder) > 0:
                         toks = remainder.split(',')
@@ -891,7 +891,8 @@ class Automate:
             if band not in BAND_TO_FREQ:
                 return DISP_NONRECOVERABLE_ERROR, 'Unknown band %s for FCD command' % (band)
             wsprFreq = BAND_TO_FREQ[band]
-            fcdFreq = wsprFreq - FCD_IF            
+            fcdFreq = wsprFreq - FCD_IF
+            p.append('-f')
             p.append(str(fcdFreq))
         elif subcommand == LNA:
             _ , gain = params
