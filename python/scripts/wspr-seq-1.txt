@@ -122,14 +122,14 @@ SEQ: -1
 MSG: -----------Starting sequence----------------
 MSG:
 MSG: **Run WsprryPi TX on 160m**
+MSG: Wait for WsprryPi completion if still running...
+WSPRRY: WSPRRY_WAIT
+MSG: WsprryPi not running/exited
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 33
 MSG: Set LPF to 160m
 LPF: LPF-160
 MSG: Run one TX sequence followed by 2 transmission gaps
-MSG: Wait for WsprryPi completion if still running...
-WSPRRY: WSPRRY_WAIT
-MSG: WsprryPi not running/exited
 WSPRRY: WSPRRY_START, 160m, 0, 0
 PAUSE: 5
 
