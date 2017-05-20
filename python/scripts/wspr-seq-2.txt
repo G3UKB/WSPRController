@@ -107,10 +107,10 @@ MSG:
 MSG:
 
 MSG: Set up pre-conditions for sequence
-MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
-ANTENNA: A_LOOP, SS_WSPRRYPI
-MSG: Set antenna route 'EFD to FCDPro+ (FCDPro+ RX input)
-ANTENNA: A_EFD_80_10, SS_FCD_PRO_PLUS
+MSG: Set antenna route 'loop to FCDPro+ (FCDPro+ RX input)'
+ANTENNA: A_LOOP, SS_FCD_PRO_PLUS
+MSG: Set antenna route 'EFD to RPi (WsprryPi TX output)'
+ANTENNA: A_EFD_80_10, SS_WSPRRYPI
 MSG: Put WSPR in run mode
 WSPR: IDLE, off
 
@@ -121,61 +121,31 @@ MSG: Iterate sequence for ever, requires Ctrl C to terminate
 SEQ: -1
 MSG: -----------Starting sequence----------------
 MSG:
-MSG: **Run WsprryPi TX on 160m**
+MSG: **Run WsprryPi TX on 40m**
 MSG: Wait for WsprryPi completion if still running...
 WSPRRY: WSPRRY_WAIT
 MSG: WsprryPi not running/exited
+MSG: Set LPF to 40m
+LPF: LPF-40
+MSG: Run one TX sequence followed by 2 transmission gaps
+WSPRRY: WSPRRY_START, 40m, 0, 0, 40m, 0, 0
+PAUSE: 5
+
+MSG:
+MSG:
+
+MSG: **Run WSPR RX using FCDPro+ IQ on 160m**
+MSG: Set FCDPro+ frequency. The IF offset is automatic for the selected band WSPR frequency.
+FCD: BAND, B_160
+MSG: Set WSPR running on 160m. WSPR details and IQ input must be pre-configured.
+MSG: Switch band to 160m (wait for WSPR to be IDLE)...
+WSPR: BAND, B_160
+MSG: Band switch completed
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 33
-MSG: Set LPF to 160m
-LPF: LPF-160
-MSG: Run two TX sequences followed by 2 transmission gaps
-WSPRRY: WSPRRY_START, 160m, 0, 0, 160m, 0, 0
-PAUSE: 5
-
-MSG:
-MSG:
-
-MSG: **Run WSPR RX using FCDPro+ IQ on 80m**
-MSG: Set FCDPro+ frequency. The IF offset is automatic for the selected band WSPR frequency.
-FCD: BAND, B_80
-MSG: Set WSPR running on 80m. WSPR details and IQ input must be pre-configured.
-MSG: Switch band to 80m (wait for WSPR to be IDLE)...
-WSPR: BAND, B_80
-MSG: Band switch completed
 WSPR: SPOT, on
 MSG: Wait for 3 RX cycles
-WSPR: CYCLES, 3
-
-MSG:
-MSG:
-
-MSG: **Run WSPR RX using FCDPro+ IQ on 40m**
-MSG: Switch band to 40m (wait for WSPR to be IDLE)...
-WSPR: BAND, B_40
-MSG: Band switch completed
-MSG: Set FCDPro+ frequency. The frequency offset is automatic for the selected band WSPR frequency
-FCD: BAND, B_40
-MSG: Wait for 3 RX cycles
-WSPR: CYCLES, 3
-
-MSG:
-MSG:
-
-MSG: **Run WsprryPi TX on 80m**
-MSG: Wait for completion if still running
-WSPRRY: WSPRRY_WAIT
-MSG: WsprryPi not running/exited
-MSG: Tune loop for 80m WSPR frequency
-LOOP: LOOP_BAND, LOOP-80, 18
-MSG: Set LPF to 80m
-LPF: LPF-80
-MSG: Run two TX sequences followed by 2 transmission gaps
-WSPRRY: WSPRRY_START, 80m, 0, 0, 80m, 0, 0
-PAUSE: 5
-
-MSG:
-MSG:
+WSPR: CYCLES, 2
 
 ENDSEQ:
 COMPLETE:
