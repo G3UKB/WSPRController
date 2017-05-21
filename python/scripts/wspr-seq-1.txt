@@ -94,7 +94,7 @@ WSPRRY: WSPRRY_PWR, 10
 PAUSE: 3
 
 MSG: Initialise Loop Controller
-LOOP: LOOP_INIT, 20, 900, 40, 400
+LOOP: LOOP_INIT, 100, 900, 40, 400
 PAUSE: 3
 
 MSG: Initialise FCDPro+
