@@ -856,8 +856,8 @@ class Automate:
                     while True:
                         print('Waiting for WsprryPi to finish')
                         try:
-                            # Give it 10.0 minutes to close as cycles are 2 mins and we could wait 2 mins for the start
-                            self.__wsprrypi_proc.wait(600)
+                            # Give it 20.0 minutes to close as cycles are 2 mins and we could wait 2 mins for the start
+                            self.__wsprrypi_proc.wait(1200)
                             print('WsprryPi exited')
                             break
                         except subprocess.TimeoutExpired:
