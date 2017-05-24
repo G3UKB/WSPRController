@@ -107,10 +107,6 @@ MSG:
 MSG:
 
 MSG: Set up pre-conditions for sequence
-MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
-ANTENNA: A_LOOP, SS_WSPRRYPI
-MSG: Set antenna route 'EFD to FCDPro+ (FCDPro+ RX input)
-ANTENNA: A_EFD_80_10, SS_FCD_PRO_PLUS
 MSG: Put WSPR in run mode
 WSPR: IDLE, off
 
