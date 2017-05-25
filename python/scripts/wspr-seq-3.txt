@@ -106,13 +106,6 @@ PAUSE: 3
 MSG:
 MSG:
 
-MSG: Set up pre-conditions for sequence
-MSG: Put WSPR in run mode
-WSPR: IDLE, off
-
-MSG:
-MSG:
-
 MSG: Iterate sequence for ever, requires Ctrl C to terminate
 SEQ: -1
 MSG: -----------Starting sequence----------------
@@ -121,6 +114,7 @@ MSG:
 # TX SEQUENCES ==================================
 
 MSG: **Run WsprryPi TX on 160m**
+WSPR: IDLE, on
 MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
 ANTENNA: A_LOOP, SS_WSPRRYPI
 MSG: Tune loop for 160m WSPR frequency
@@ -178,6 +172,7 @@ MSG: Switch band to 160m (wait for WSPR to be IDLE)...
 WSPR: BAND, B_160
 MSG: Band switch completed
 WSPR: SPOT, on
+WSPR: IDLE, off
 MSG: Wait for 2 RX cycles
 WSPR: CYCLES, 2
 
