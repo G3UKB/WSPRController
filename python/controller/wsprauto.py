@@ -1144,7 +1144,7 @@ class Automate:
                         return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to relay change!'
                 # Set the position for antenna band WSPR dial frequency
                 self.__loopEvt.clear()
-                self.__loopControl.move(extension)
+                self.__loopControl.move((value, False))
                 if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                     return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
         else:
