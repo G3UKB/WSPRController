@@ -1121,13 +1121,13 @@ class Automate:
         
         return DISP_CONTINUE, None
     
-    def __doLoopTune(self, antenna, extension):            
+    def __doLoopTune(self, antenna, value):            
         """
         Instruct the loop module to set and tune the selected loop
         
         Arguments:
-            antenna       --  the internal antenna name for the loop
-            extension     --  the % extension for the the band WSPR freq
+            antenna   --  the internal antenna name for the loop
+            value     --  the analog pot value for the the band WSPR freq
         """
         
         if antenna in ANTENNA_TO_LOOP_INTERNAL:
