@@ -118,7 +118,7 @@ WSPR: IDLE, on
 MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
 ANTENNA: A_LOOP, SS_WSPRRYPI
 MSG: Tune loop for 160m WSPR frequency
-LOOP: LOOP_BAND, LOOP-160, 565
+LOOP: LOOP_BAND, LOOP-160, 547
 MSG: Set LPF to 160m
 LPF: LPF-160
 MSG: Run one TX sequences
@@ -164,7 +164,7 @@ MSG: **Run WSPR RX using FCDPro+ IQ on 160m**
 MSG: Set antenna route 'Loop to FCDPro+ (FCDPro+ RX input)
 ANTENNA: A_LOOP, SS_FCD_PRO_PLUS
 MSG: Tune loop for 160m WSPR frequency
-LOOP: LOOP_BAND, LOOP-160, 565
+LOOP: LOOP_BAND, LOOP-160, 547
 MSG: Set FCDPro+ frequency. The IF offset is automatic for the selected band WSPR frequency.
 FCD: BAND, B_160
 MSG: Set WSPR running on 160m. WSPR details and IQ input must be pre-configured.
