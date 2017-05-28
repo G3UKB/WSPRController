@@ -118,6 +118,9 @@ MSG:
 # TX SEQUENCES ==================================
 
 MSG: **Run WsprryPi TX on 160m**
+MSG: Wait for WsprryPi completion if still running...
+WSPRRY: WSPRRY_WAIT
+MSG: WsprryPi not running/exited
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 559
 MSG: Set LPF to 160m
