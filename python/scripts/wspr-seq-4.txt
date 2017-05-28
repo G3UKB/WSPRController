@@ -77,15 +77,6 @@
 
 MSG: Starting WSPR script
 
-MSG: Initialise WSPR program
-WSPR: INVOKE
-PAUSE: 5
-WSPR: IDLE, on
-WSPR: TX, off
-WSPR: POWER, 10.0, 0.1
-WSPR: SPOT, off
-PAUSE: 5
-
 MSG: Initialise WsprryPi
 WSPRRY: WSPRRY_OPTIONS, -s, -o
 WSPRRY: WSPRRY_CALLSIGN, G3UKB
@@ -95,12 +86,6 @@ PAUSE: 3
 
 MSG: Initialise Loop Controller
 LOOP: LOOP_INIT, 100, 900, 40, 400
-PAUSE: 3
-
-MSG: Initialise FCDPro+
-FCD: LNA, off
-FCD: MIXER, off
-FCD: IF, 0
 PAUSE: 3
 
 MSG: Pre-conditions
