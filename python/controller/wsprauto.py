@@ -153,15 +153,19 @@ class Automate:
         COMPLETE:   # End of script
       Hardware commands:
         LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
-        ANTENNA: source, dest
+        ANTENNA: SWITCH, source, dest
                     # Sets up a route between an antenna and a destination TX or RX capability.
                     # e.g. 160-80m-loop, FCDPro+. Mapping is involved to relay activation.
                     # see defs.py ANTENNA_TO_INTERNAL for antenna constants
+        ANTENNA: SWR
+                    # Checks antenna SWR using the VNA
         LOOP: INIT, % low_setpoint, % high_setpoint, % motor_speed, driver max speed_factor
                     # Initialise the loop tuner with offsets etc
         LOOP: BAND, antenna, extension
                     # Switch the loop to band, and extend the actuator to % extension.
                     # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
+        LOOP: ADJUST
+                    # Micro-adjust tuning for lowest SWR using VNA
         RADIO:  CAT, radio, com_port, baud_rate
                     # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
                 BAND, MHz
@@ -646,9 +650,13 @@ class Automate:
         
         """
         
-        if len(params) != 2:
-            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!' % (params)
-        return self.__doAntenna(params[0], params[1])
+        subcommand = params[0]
+        if subcommand == SWITCH:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!' % (params)
+            return self.__doAntenna(params[0], params[1])
+        elif subcommand == SWR:
+            pass
     
     def __loop(self, params, index):
         """
@@ -704,6 +712,8 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for loop tune %s!' % (params)
             _, antenna, extension = params
             return self.__doLoopTune(antenna, int(extension))
+        elif subcommand == LOOP_ADJUST:
+            pass
     
     def __radio(self, params, index):
         """

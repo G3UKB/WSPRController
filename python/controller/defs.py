@@ -59,9 +59,12 @@ LPF_80      = 'LPF-80'
 LPF_40      = 'LPF-40'
 
 ANTENNA     = 'ANTENNA'     # Commands related to antenna switching
+SWITCH      = 'SWITCH'      # Switch route
+SWR         = 'SWR'         # Check SWR
 LOOP        = 'LOOP'        # Commands related to the loop switching and tuning
 LOOP_INIT   = 'LOOP_INIT'   # Initialise the loop system
 LOOP_BAND   = 'LOOP_BAND'   # Tune to the WSPR freq for the band
+LOOP_ADJUST = 'LOOP_ADJUST' # Fine tune
 
 RADIO       = 'RADIO'       # CAT commands to external radios
 CAT         = 'CAT'
@@ -235,6 +238,7 @@ A_VERT_6_4_2 = 'A_VERT_6_4_2'
 SS_FCD_PRO_PLUS = 'SS_FCD_PRO_PLUS'
 SS_WSPRRYPI = 'SS_WSPRRYPI'
 SS_IC7100 = 'SS_IC7100'
+SS_VNA = 'SS_VNA'
 
 # Map antenna name in the script file to the internal name
 ANTENNA_TO_INTERNAL = {
@@ -256,12 +260,15 @@ RELAY_OFF = 'relayoff'
 RELAY_NA = 'rna'
 
 ANTENNA_TO_SS_ROUTE = {
-    '%s:%s' % (A_EFD_80_10, SS_FCD_PRO_PLUS):   {1: RELAY_OFF, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_OFF, 5:RELAY_NA},
-    '%s:%s' % (A_EFD_80_10, SS_WSPRRYPI):       {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_NA},
-    '%s:%s' % (A_EFD_80_10, SS_IC7100):         {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_NA},
-    '%s:%s' % (A_LOOP, SS_WSPRRYPI):            {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_OFF, 4:RELAY_NA, 5:RELAY_OFF},
-    '%s:%s' % (A_LOOP, SS_FCD_PRO_PLUS):        {1: RELAY_ON, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_NA, 5:RELAY_ON},
-    '%s:%s' % (A_LOOP, SS_IC7100):              {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_OFF, 4:RELAY_NA, 5:RELAY_OFF},
+    '%s:%s' % (A_EFD_80_10, SS_FCD_PRO_PLUS):   {1: RELAY_OFF, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_OFF, 5:RELAY_NA, 6:RELAY_NA},
+    '%s:%s' % (A_EFD_80_10, SS_WSPRRYPI):       {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_NA, 4:RELAY_ON, 5:RELAY_ON, 6:RELAY_NA},
+    '%s:%s' % (A_EFD_80_10, SS_IC7100):         {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_ON, 6:RELAY_NA},
+    '%s:%s' % (A_LOOP, SS_FCD_PRO_PLUS):        {1: RELAY_ON, 2:RELAY_NA, 3:RELAY_NA, 4:RELAY_NA, 5:RELAY_NA, 6:RELAY_ON},
+    '%s:%s' % (A_LOOP, SS_WSPRRYPI):            {1: RELAY_NA, 2:RELAY_OFF, 3:RELAY_NA, 4:RELAY_NA, 5:RELAY_OFF, 6:RELAY_OFF},
+    '%s:%s' % (A_LOOP, SS_IC7100):              {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_OFF, 4:RELAY_NA, 5:RELAY_OFF, 6:RELAY_OFF},
+    # Tuning aid
+    '%s:%s' % (A_EFD_80_10, SS_VNA):            {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_ON, 4:RELAY_ON, 5:RELAY_ON, 6:RELAY_NA},
+    '%s:%s' % (A_LOOP, SS_VNA):                 {1: RELAY_NA, 2:RELAY_ON, 3:RELAY_ON, 4:RELAY_NA, 5:RELAY_OFF, 6:RELAY_OFF},
 }
 
 # Default parameters
