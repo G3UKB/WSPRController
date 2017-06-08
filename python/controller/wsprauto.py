@@ -158,7 +158,7 @@ class Automate:
                     # e.g. 160-80m-loop, FCDPro+. Mapping is involved to relay activation.
                     # see defs.py ANTENNA_TO_INTERNAL for antenna constants
         ANTENNA: SWR
-                    # Checks antenna SWR using the VNA
+                    # Checks current antenna SWR using the VNA.
         LOOP: INIT, % low_setpoint, % high_setpoint, % motor_speed, driver max speed_factor
                     # Initialise the loop tuner with offsets etc
         LOOP: BAND, antenna, extension
@@ -234,6 +234,9 @@ class Automate:
         self.__cat  = None
         self.__loopControl = None
         self.__wsprTx = False
+        self.__antennaRoute = (None, None)
+        self.__wsprrypiFreqList = []
+        self.__currentLoop = None
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -242,6 +245,11 @@ class Automate:
         self.__loopControl = loopcontrol.ControllerAPI(LOOP_CTRL_ARDUINO_ADDR, self.__loopControlCallback, self.__loopEvntCallback)
         sleep(2.0)
         
+        # Create a socket for the VNA application
+        self.__vnasock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.__vnasock.bind((VNA_LOCAL_IP, VNA_REPLY_PORT))
+        self.__vnasock.settimeout(VNA_TIMEOUT)
+
         # Script sequence and current state
         self.__script = []
         # The script file is parsed into an internal list of the following form:
@@ -656,7 +664,8 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!' % (params)
             return self.__doAntenna(params[0], params[1])
         elif subcommand == SWR:
-            pass
+            # Switch the current antenna to the VNA
+            return self.__doAntennaSWR(self.__antennaRoute[0], SS_VNA)
     
     def __loop(self, params, index):
         """
@@ -713,7 +722,7 @@ class Automate:
             _, antenna, extension = params
             return self.__doLoopTune(antenna, int(extension))
         elif subcommand == LOOP_ADJUST:
-            pass
+            return self.__doLoopAdjust()
     
     def __radio(self, params, index):
         """
@@ -855,6 +864,7 @@ class Automate:
             freqList = params[1:]
             for freq in freqList:
                 p.append(freq)
+            self.__wsprrypiFreqList = freqList
             # Invoke WsprryPi
             try:
                 self.__wsprrypi_proc = subprocess.Popen(p)
@@ -1102,20 +1112,22 @@ class Automate:
     
     # =================================================================================
     # Antennas
-    def __doAntenna(self, antenna, sourceSink):
+    def __doAntenna(self, antenna, sourceSink, save=True):
         """
         Instruct the antenna switching module to switch to the given route.
-        A route is an antenna to 
+        A route is an antenna to a source (TX) or sink (RX).
         
         Arguments:
             antenna       --  the internal antenna name
             sourceSink    --  the internal RX/TX/Both name
+            save          --  if True save the route
             
         """
         
         # The key to the dictionary id antenna:sourceSink
         try:
             key = '%s:%s' % (antenna, sourceSink)
+            if save: self.__antennaRoute = (antenna, sourceSink)
             matrix = ANTENNA_TO_SS_ROUTE[key]
             for relay, state in matrix.items():
                 if state != RELAY_NA:
@@ -1131,6 +1143,55 @@ class Automate:
         
         return DISP_CONTINUE, None
     
+    def __doAntennaSWR(self, antenna, sourceSink):
+        """
+        Instruct the antenna switching module to switch the antenna
+        to the VNA for checking the SWR.
+        Switch back to the previous route after checking.
+        
+        Arguments:
+            antenna       --  the internal antenna name
+            sourceSink    --  the internal VNA name
+            
+        """
+        
+        msg = None
+        
+        # Switch antenna to the VNA port
+        resp = self.__doAntenna(antenna, sourceSink, False) 
+        if resp[0] != DISP_CONTINUE:
+            return resp, None
+            
+        # Get the SWR at the mid TX frequency of the current WSPR band
+        # Get the current TX band
+        wsprFreq = None
+        for f in self.__wsprrypiFreqList:
+            if f != '0':
+                # Translate to an actual frequency in Hz
+                wsprFreq = WSPRRY_TO_FREQ[f]
+                # Query the VNA for SWR at the TX frequency
+                r, swr = self.__doVNA(RQST_FSWR, wsprFreq)
+                if r:
+                    # Good response
+                    print('VSWR: ', swr[1])
+                else:
+                    # Oops #1
+                    msg = 'Error getting VSWR'
+        if wsprFreq == None:
+            # Oops #2
+            msg = 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
+            
+        # Switch the antenna back to its previous route
+        r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
+        if r != DISP_CONTINUE:
+            return r, None
+        
+        # Did we have a previous failure
+        if msg != None:
+            return DISP_RECOVERABLE_ERROR, msg
+        
+        return DISP_CONTINUE, None
+        
     def __doLoopTune(self, antenna, value):            
         """
         Instruct the loop module to set and tune the selected loop
@@ -1142,6 +1203,7 @@ class Automate:
         
         if antenna in ANTENNA_TO_LOOP_INTERNAL:
             internalAntennaName = ANTENNA_TO_LOOP_INTERNAL[antenna]
+            self.__currentLoop = internalAntennaName
             if internalAntennaName == A_LOOP_160 or internalAntennaName == A_LOOP_80:
                 # Switch the relays to the selected antenna
                 matrix = ANTENNA_TO_LOOP_MATRIX[internalAntennaName]
@@ -1162,6 +1224,85 @@ class Automate:
         
         return DISP_CONTINUE, None
     
+    def __doLoopAdjust(self, antenna, sourceSink):
+        """
+        Fine tune the antenna for lowest SWR if required.
+        Only applies to the loops at present.
+        
+        Arguments:
+            antenna       --  the internal antenna name
+            sourceSink    --  the internal VNA name
+            
+        """
+        
+        msg = ''
+        error = False
+        
+        # Switch antenna to the VNA port
+        resp = self.__doAntenna(antenna, sourceSink, False) 
+        if resp[0] != DISP_CONTINUE:
+            return resp
+            
+        # Get the SWR at the mid TX frequency of the current WSPR band
+        # Get the current TX band
+        wsprFreq = None
+        for f in self.__wsprrypiFreqList:
+            if f != '0':
+                # Translate to an actual frequency in Hz
+                wsprFreq = WSPRRY_TO_FREQ[f]
+                # Query the VNA for SWR at the TX frequency
+                r, swr = self.__doVNA(RQST_FSWR, wsprFreq)
+                if r:
+                    # Good response
+                    if swr[1] <= 1.7:
+                        print ('SWR is OK at %d', swr[1])
+                    else:
+                        r, swr = self.__loopNudge(wsprFreq)
+                        if r:
+                            # Good response
+                            if swr <= 1.7:
+                                print ('SWR now is OK at %d', swr)
+                            else:
+                                print ('Failed to obtain good SWR best at %d', swr)
+                else:
+                    # Oops #1
+                    msg = 'Error getting SWR'
+                    error = True
+        if wsprFreq == None:
+            # Oops #2
+            msg = 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
+            error = True
+    
+        # Switch the antenna back to its previous route
+        r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
+        if r != DISP_CONTINUE:
+            return r, None
+        
+        # Did we have a previous failure
+        if msg != None:
+            return DISP_RECOVERABLE_ERROR, msg
+        
+        return DISP_CONTINUE, None
+    
+    def __loopNudge(self, freq):
+        
+        while True:
+            # Get the current resonant frequency
+            r, freq = self.__doVNA(RQST_FRES, freq - 1000, freq + 1000)
+            diff = wsprFreq - freq
+            self.__loopEvt.clear()
+            if diff > 0:
+                # Too low so need to nudge reverse
+                self.__loopControl.nudge(REVERSE, 0.5, 100, 900)
+            else:
+                # Too high so need to nudge forward
+                self.__loopControl.nudge(FORWARD, 0.5, 100, 900)
+                
+            if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
+                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
+            # Improve this!
+            break
+                
     # =================================================================================
     # Radios
     def __doRadio(self, params):
@@ -1250,7 +1391,28 @@ class Automate:
         GPIO.output(PIN_80_2, GPIO.HIGH)
         GPIO.output(PIN_40_1, GPIO.HIGH)
         GPIO.output(PIN_40_2, GPIO.HIGH)
-            
+    
+    def __doVNA(rqstType, wsprFreq1, wsprFreq2=0):
+        """
+        Send a command to the VNA and return the response
+        
+        Arguments:
+            rqstType    --  RQST_FRES | RQST_FSWR | RQST_SCAN
+            wsprFreq1   --  the start or target frequency
+            wsprFreq2   --  type dependent stop frequency
+        
+        """
+        
+        try:
+            # Make the request
+            self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1, wsprFreq2]), (VNA_RQST_IP, VNA_RQST_PORT))
+            # Wait for a reply
+            data, address = sock.recvfrom(VNA_BUFFER)
+            return True, pickle.loads(data)
+        except socket.timeout:
+            # No VNA application or something failed
+            return False, None
+        
 """
 
 Event thread.

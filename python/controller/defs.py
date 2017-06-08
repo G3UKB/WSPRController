@@ -292,3 +292,36 @@ ANTENNA_TO_LOOP_MATRIX = {
     A_LOOP_80:   {1: RELAY_ON, 2:RELAY_ON, 3: RELAY_OFF, 4: RELAY_OFF},
 }
 
+# ===============================================================================
+# VNA definitions
+
+# Net interface defs
+VNA_RQST_IP = '192.168.1.109'
+VNA_RQST_PORT = 10002
+
+VNA_LOCAL_IP = '127,0,0,1'
+VNA_REPLY_PORT = 10003
+
+VNA_TIMEOUT = 5.0
+VNA_BUFFER = 1024
+
+# Types
+RQST_FRES = 'fres'
+RQST_FSWR = 'fswr'
+RQST_SCAN = 'scan'
+
+WSPRRY_TO_FREQ = {
+    '160m':   1836600,
+    '80m':    3592600,
+    '60m':    5287200,
+    '40m':    7038600,
+    '30m':    10138700,
+    '20m':    14095600,
+    '17m':    18104600,
+    '15m':    21094600,
+    '12m':    24924600,
+    '10m':    28124600,
+    '6m':     50293000,
+    '4m':     70028600,
+    '2m':     144488500,          
+}
