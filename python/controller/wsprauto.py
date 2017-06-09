@@ -1251,19 +1251,16 @@ class Automate:
                 # Translate to an actual frequency in Hz
                 wsprFreq = WSPRRY_TO_FREQ[f]
                 # Query the VNA for SWR at the TX frequency
-                r, swr = self.__doVNA(RQST_FSWR, wsprFreq)
-                if r:
-                    # Good response
-                    if swr[1] <= 1.7:
-                        print ('SWR is OK at %d', swr[1])
-                    else:
-                        r, swr = self.__loopNudge(wsprFreq)
-                        if r:
-                            # Good response
-                            if swr <= 1.7:
-                                print ('SWR now is OK at %d', swr)
-                            else:
-                                print ('Failed to obtain good SWR best at %d', swr)
+                r, swr = self.__getSWR(wsprFreq)
+                if not r:
+                    # Try to improve
+                    r, swr = self.__loopNudge(wsprFreq)
+                    if r:
+                        # Good response
+                        if swr <= 1.7:
+                            print ('SWR now is OK at %d', swr)
+                        else:
+                            print ('Failed to obtain good SWR best at %d', swr)
                 else:
                     # Oops #1
                     msg = 'Error getting SWR'
@@ -1283,9 +1280,17 @@ class Automate:
             return DISP_RECOVERABLE_ERROR, msg
         
         return DISP_CONTINUE, None
-    
-    def __loopNudge(self, freq):
         
+    def __loopNudge(self, freq):
+        """
+        Try to nudge the tuning to a better SWR
+        
+        Arguments:
+            freq    --  the required resonant frequency
+            
+        """
+        
+        tries = 5
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, freq - 1000, freq + 1000)
@@ -1297,11 +1302,38 @@ class Automate:
             else:
                 # Too high so need to nudge forward
                 self.__loopControl.nudge(FORWARD, 0.5, 100, 900)
-                
+                        
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
             # Improve this!
-            break
+            r, swr = self.__getSWR(wsprFreq)
+            if r:
+                break
+            tries -= 1
+            if tries <= 0:
+                return False, swr
+            
+        return True, swr
+    
+    def __getSWR(self, freq):
+        """
+        Return the SWR at the given frequency
+        
+        Arguments:
+            freq    --  the required resonant frequency
+            
+        """
+        
+        # Query the VNA for SWR at the TX frequency
+        r, swr = self.__doVNA(RQST_FSWR, freq)
+        if r:
+            # Good response
+            if swr[1] <= 1.7:
+                print ('SWR is OK at %d', swr[1])
+                return True, swr
+            else:
+                print ('SWR is too high at %d', swr[1])
+                return False, swr
                 
     # =================================================================================
     # Radios
