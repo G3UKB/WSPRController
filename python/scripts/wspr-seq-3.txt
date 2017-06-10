@@ -36,15 +36,19 @@
 #        COMPLETE:   # End of script
 #      Hardware commands:
 #        LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
-#        ANTENNA: source, dest
+#        ANTENNA: SWITCH, source, dest
 #                    # Sets up a route between an antenna and a destination TX or RX capability.
 #                    # e.g. 160-80m-loop, FCDPro+. Mapping is involved to relay activation.
 #                    # see defs.py ANTENNA_TO_INTERNAL for antenna constants
+#        ANTENNA: SWR
+#                    # Checks current antenna SWR using the VNA.
 #        LOOP: INIT, % low_setpoint, % high_setpoint, % motor_speed, driver max speed_factor
 #                    # Initialise the loop tuner with offsets etc
 #        LOOP: BAND, antenna, extension
 #                    # Switch the loop to band, and extend the actuator to % extension.
 #                    # see defs.py ANTENNA_TO_LOOP_INTERNAL for antenna constants
+#        LOOP: ADJUST
+#                    # Micro-adjust tuning for lowest SWR using VNA
 #        RADIO: CAT, radio, com_port, baud_rate
 #                    # Supported radios IC7100 | FT817, baud-rate. Must be executed to initiate CAT control.
 #                BAND, MHz
@@ -116,7 +120,7 @@ MSG:
 MSG: **Run WsprryPi TX on 160m**
 WSPR: IDLE, on
 MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
-ANTENNA: A_LOOP, SS_WSPRRYPI
+ANTENNA: SWITCH, A_LOOP, SS_WSPRRYPI
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 547
 MSG: Set LPF to 160m
@@ -148,7 +152,7 @@ MSG: Wait for WsprryPi completion if still running...
 WSPRRY: WSPRRY_WAIT
 MSG: WsprryPi not running/exited
 MSG: Set antenna route 'EFD to RPi (WsprryPi TX output)'
-ANTENNA: A_EFD_80_10, SS_WSPRRYPI
+ANTENNA: SWITCH, A_EFD_80_10, SS_WSPRRYPI
 MSG: Set LPF to 40m
 LPF: LPF-40
 MSG: Run one TX sequences followed by 2 transmission gaps
@@ -162,7 +166,7 @@ MSG:
 
 MSG: **Run WSPR RX using FCDPro+ IQ on 160m**
 MSG: Set antenna route 'Loop to FCDPro+ (FCDPro+ RX input)
-ANTENNA: A_LOOP, SS_FCD_PRO_PLUS
+ANTENNA: SWITCH, A_LOOP, SS_FCD_PRO_PLUS
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 547
 MSG: Set FCDPro+ frequency. The IF offset is automatic for the selected band WSPR frequency.
@@ -199,7 +203,7 @@ MSG: **Run WSPR RX using FCDPro+ IQ on 40m**
 MSG: Wait for WsprryPi completion if still running...
 WSPRRY: WSPRRY_WAIT
 MSG: Set antenna route 'EFD to FCDPro+ (FCDPro+ RX input)
-ANTENNA: A_EFD_80_10, SS_FCD_PRO_PLUS
+ANTENNA: SWITCH, A_EFD_80_10, SS_FCD_PRO_PLUS
 MSG: Set FCDPro+ frequency. The IF offset is automatic for the selected band WSPR frequency.
 FCD: BAND, B_40
 MSG: Set WSPR running on 40m. WSPR details and IQ input must be pre-configured.
