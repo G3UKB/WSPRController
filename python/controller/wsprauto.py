@@ -1239,49 +1239,37 @@ class Automate:
             
         """
         
-        msg = ''
-        error = False
-        
         # Switch antenna to the VNA port
         resp = self.__doAntenna(antenna, sourceSink, False) 
         if resp[0] != DISP_CONTINUE:
             return resp
-            
-        # Get the SWR at the mid TX frequency of the current WSPR band
-        # Get the current TX band
-        wsprFreq = None
-        for f in self.__wsprrypiFreqList:
-            if f != '0':
-                # Translate to an actual frequency in Hz
-                wsprFreq = WSPRRY_TO_FREQ[f]
-                # Query the VNA for SWR at the TX frequency
-                r, swr = self.__getSWR(wsprFreq)
-                if not r:
-                    # Try to improve
-                    r, swr = self.__loopNudge(wsprFreq)
-                    if r:
-                        # Good response
-                        if swr <= 1.7:
-                            print ('SWR now is OK at %d', swr)
-                        else:
-                            print ('Failed to obtain good SWR best at %d', swr)
+        
+        # Get the WSPR frequency for the current band
+        if self.__currentLoop == A_LOOP_160:
+            wsprFreq = WSPRRY_TO_FREQ['160m']
+        elif self.__currentLoop == A_LOOP_80:
+            wsprFreq = WSPRRY_TO_FREQ['80m']
+        else:
+            return DISP_RECOVERABLE_ERROR, 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
+        
+        # Query the VNA for SWR at the TX frequency
+        r, swr = self.__getSWR(wsprFreq)
+        if not r:
+            # Try to improve
+            r, swr = self.__loopNudge(wsprFreq)
+            if r:
+                # Good response
+                if swr <= 1.7:
+                    print ('SWR now is OK at %d', swr)
                 else:
-                    # Oops #1
-                    msg = 'Error getting SWR'
-                    error = True
-        if wsprFreq == None:
-            # Oops #2
-            msg = 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
-            error = True
-    
+                    print ('Failed to obtain good SWR best at %d', swr)
+        else:
+            return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
+            
         # Switch the antenna back to its previous route
         r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
         if r != DISP_CONTINUE:
             return r, None
-        
-        # Did we have a previous failure
-        if msg != None:
-            return DISP_RECOVERABLE_ERROR, msg
         
         return DISP_CONTINUE, None
         
