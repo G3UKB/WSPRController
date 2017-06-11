@@ -248,7 +248,8 @@ class Automate:
         
         # Create a socket for the VNA application
         self.__vnasock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.__vnasock.bind((VNA_LOCAL_IP, VNA_REPLY_PORT))
+        # Can't bind else cant send to remote IP
+        #self.__vnasock.bind((VNA_LOCAL_IP, VNA_REPLY_PORT))
         self.__vnasock.settimeout(VNA_TIMEOUT)
 
         # Script sequence and current state
