@@ -296,7 +296,7 @@ ANTENNA_TO_LOOP_MATRIX = {
 # VNA definitions
 
 # Net interface defs
-VNA_RQST_IP = '192.168.1.109'
+VNA_RQST_IP = '192.168.1.108'
 VNA_RQST_PORT = 10002
 
 VNA_LOCAL_IP = '127,0,0,1'
