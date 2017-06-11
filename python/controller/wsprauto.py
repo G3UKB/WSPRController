@@ -666,6 +666,8 @@ class Automate:
         elif subcommand == SWR:
             # Switch the current antenna to the VNA
             return self.__doAntennaSWR(self.__antennaRoute[0], SS_VNA)
+        
+        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to Antenna Switch %s!', params
     
     def __loop(self, params, index):
         """
@@ -723,6 +725,8 @@ class Automate:
             return self.__doLoopTune(antenna, int(extension))
         elif subcommand == LOOP_ADJUST:
             return self.__doLoopAdjust(A_LOOP, SS_VNA)
+        
+        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to Loop %s!', params
     
     def __radio(self, params, index):
         """
