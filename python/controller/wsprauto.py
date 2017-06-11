@@ -1416,7 +1416,7 @@ class Automate:
         GPIO.output(PIN_40_1, GPIO.HIGH)
         GPIO.output(PIN_40_2, GPIO.HIGH)
     
-    def __doVNA(rqstType, wsprFreq1, wsprFreq2=0):
+    def __doVNA(self, rqstType, wsprFreq1, wsprFreq2=0):
         """
         Send a command to the VNA and return the response
         
