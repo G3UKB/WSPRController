@@ -29,6 +29,7 @@ import signal
 from time import sleep
 import datetime
 import math
+import pickle
 import logging
 import logging.handlers
 # This is specific to the RPi for LPF switching
