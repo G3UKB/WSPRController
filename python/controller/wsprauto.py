@@ -722,7 +722,7 @@ class Automate:
             _, antenna, extension = params
             return self.__doLoopTune(antenna, int(extension))
         elif subcommand == LOOP_ADJUST:
-            return self.__doLoopAdjust()
+            return self.__doLoopAdjust(A_LOOP, SS_VNA)
     
     def __radio(self, params, index):
         """
