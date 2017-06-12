@@ -1288,7 +1288,7 @@ class Automate:
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 1000, wsprFreq + 1000)
-            diff = wsprFreq - freq[0][0]
+            diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if diff > 0:
                 # Too low so need to nudge reverse
