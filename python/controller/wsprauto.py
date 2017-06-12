@@ -248,8 +248,8 @@ class Automate:
         
         # Create a socket for the VNA application
         self.__vnasock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # Can't bind else cant send to remote IP
-        #self.__vnasock.bind((VNA_LOCAL_IP, VNA_REPLY_PORT))
+        # Bind to any ip and the reply port
+        self.__vnasock.bind(('', VNA_REPLY_PORT))
         self.__vnasock.settimeout(VNA_TIMEOUT)
 
         # Script sequence and current state
@@ -1433,7 +1433,7 @@ class Automate:
             # Make the request
             self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1, wsprFreq2]), (VNA_RQST_IP, VNA_RQST_PORT))
             # Wait for a reply
-            data, address = sock.recvfrom(VNA_BUFFER)
+            data, address = self.__vnasock.sock.recvfrom(VNA_BUFFER)
             return True, pickle.loads(data)
         except socket.timeout:
             # No VNA application or something failed
