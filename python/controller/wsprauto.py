@@ -1292,10 +1292,10 @@ class Automate:
             self.__loopEvt.clear()
             if diff > 0:
                 # Too low so need to nudge reverse
-                self.__loopControl.nudge(REVERSE, 0.5, 100, 900)
+                self.__loopControl.nudge((REVERSE, 0.5, 100, 900))
             else:
                 # Too high so need to nudge forward
-                self.__loopControl.nudge(FORWARD, 0.5, 100, 900)
+                self.__loopControl.nudge((FORWARD, 0.5, 100, 900))
                         
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
