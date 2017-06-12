@@ -1433,7 +1433,7 @@ class Automate:
             # Make the request
             self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1, wsprFreq2]), (VNA_RQST_IP, VNA_RQST_PORT))
             # Wait for a reply
-            data, address = self.__vnasock.sock.recvfrom(VNA_BUFFER)
+            data, address = self.__vnasock.recvfrom(VNA_BUFFER)
             return True, pickle.loads(data)
         except socket.timeout:
             # No VNA application or something failed
