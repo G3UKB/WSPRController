@@ -292,6 +292,12 @@ ANTENNA_TO_LOOP_MATRIX = {
     A_LOOP_80:   {1: RELAY_ON, 2:RELAY_ON, 3: RELAY_OFF, 4: RELAY_OFF},
 }
 
+
+# ===============================================================================
+# Loop actuator definitions
+FORWARD = 'forward'
+REVERSE = 'reverse'
+
 # ===============================================================================
 # VNA definitions
 
