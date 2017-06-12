@@ -1262,9 +1262,9 @@ class Automate:
             if r:
                 # Good response
                 if float(swr[0][1]) <= 1.7:
-                    print ('SWR now is OK at %f', float(swr[0][1]))
+                    print ('SWR now is OK at %f' % float(swr[0][1]))
                 else:
-                    print ('Failed to obtain good SWR best at %f', float(swr[0][1]))
+                    print ('Failed to obtain good SWR best at %f' % float(swr[0][1]))
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
             
@@ -1288,7 +1288,7 @@ class Automate:
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 1000, wsprFreq + 1000)
-            diff = wsprFreq - freq
+            diff = wsprFreq - freq[0][0]
             self.__loopEvt.clear()
             if diff > 0:
                 # Too low so need to nudge reverse
@@ -1323,10 +1323,10 @@ class Automate:
         if r:
             # Good response
             if float(swr[0][1]) <= 1.7:
-                print ('SWR is OK at %f', float(swr[0][1]))
+                print ('SWR is OK at %f' % float(swr[0][1]))
                 return True, swr
             else:
-                print ('SWR is too high at %f', float(swr[0][1]))
+                print ('SWR is too high at %f' % float(swr[0][1]))
                 return False, swr
         else:
             return False, None
