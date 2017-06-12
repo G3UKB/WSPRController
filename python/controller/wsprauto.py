@@ -1275,12 +1275,12 @@ class Automate:
         
         return DISP_CONTINUE, None
         
-    def __loopNudge(self, freq):
+    def __loopNudge(self, wsprFreq):
         """
         Try to nudge the tuning to a better SWR
         
         Arguments:
-            freq    --  the required resonant frequency
+            wsprFreq    --  the required resonant frequency
             
         """
         
