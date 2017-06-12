@@ -1287,7 +1287,7 @@ class Automate:
         tries = 5
         while True:
             # Get the current resonant frequency
-            r, freq = self.__doVNA(RQST_FRES, wsprFreq - 1000, wsprFreq + 1000)
+            r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if diff > 0:
@@ -1296,7 +1296,6 @@ class Automate:
             else:
                 # Too high so need to nudge forward
                 self.__loopControl.nudge((FORWARD, 0.5, 100, 900))
-                        
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
             # Improve this!
