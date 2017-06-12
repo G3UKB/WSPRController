@@ -1261,10 +1261,10 @@ class Automate:
             r, swr = self.__loopNudge(wsprFreq)
             if r:
                 # Good response
-                if swr[0][1] <= 1.7:
-                    print ('SWR now is OK at %d', swr[0][1])
+                if float(swr[0][1]) <= 1.7:
+                    print ('SWR now is OK at %f', float(swr[0][1]))
                 else:
-                    print ('Failed to obtain good SWR best at %d', swr[0][1])
+                    print ('Failed to obtain good SWR best at %f', float(swr[0][1]))
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
             
@@ -1322,11 +1322,11 @@ class Automate:
         r, swr = self.__doVNA(RQST_FSWR, freq)
         if r:
             # Good response
-            if swr[0][1] <= 1.7:
-                print ('SWR is OK at %d', swr[1])
+            if float(swr[0][1]) <= 1.7:
+                print ('SWR is OK at %f', float(swr[0][1]))
                 return True, swr
             else:
-                print ('SWR is too high at %d', swr[1])
+                print ('SWR is too high at %f', float(swr[0][1]))
                 return False, swr
         else:
             return False, None
