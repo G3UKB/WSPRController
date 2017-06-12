@@ -249,7 +249,7 @@ class Automate:
         # Create a socket for the VNA application
         self.__vnasock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Bind to any ip and the reply port
-        self.__vnasock.bind(('', VNA_REPLY_PORT))
+        self.__vnasock.bind((VNA_LOCAL_IP, VNA_REPLY_PORT))
         self.__vnasock.settimeout(VNA_TIMEOUT)
 
         # Script sequence and current state
@@ -1328,6 +1328,8 @@ class Automate:
             else:
                 print ('SWR is too high at %d', swr[1])
                 return False, swr
+        else:
+            return False, None
                 
     # =================================================================================
     # Radios
@@ -1431,7 +1433,10 @@ class Automate:
         
         try:
             # Make the request
-            self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1, wsprFreq2]), (VNA_RQST_IP, VNA_RQST_PORT))
+            if rqstType == RQST_FSWR:
+                self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1]), (VNA_RQST_IP, VNA_RQST_PORT))
+            else:
+                self.__vnasock.sendto(pickle.dumps([rqstType, wsprFreq1, wsprFreq2]), (VNA_RQST_IP, VNA_RQST_PORT))
             # Wait for a reply
             data, address = self.__vnasock.recvfrom(VNA_BUFFER)
             return True, pickle.loads(data)
