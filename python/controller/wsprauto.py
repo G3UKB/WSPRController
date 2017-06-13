@@ -1260,19 +1260,21 @@ class Automate:
         elif self.__currentLoop == A_LOOP_80:
             wsprFreq = WSPRRY_TO_FREQ['80m']
         else:
-            return DISP_RECOVERABLE_ERROR, 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
+            return DISP_RECOVERABLE_ERROR, 'Failed to find valid frequency for VNA [%d]' % (wsprFreq)
         
         # Query the VNA for SWR at the TX frequency
         r, swr = self.__getSWR(wsprFreq)
-        if not r:
-            # Try to improve
-            r, swr = self.__loopNudge(wsprFreq)
-            if r:
-                # Good response
-                if float(swr[0][1]) <= 1.7:
-                    print ('SWR now is OK at %f' % float(swr[0][1]))
-                else:
-                    print ('Failed to obtain good SWR best at %f' % float(swr[0][1]))
+        if r:
+            if float(swr[0][1]) > 1.7:
+                # Try to improve
+                print('Trying to improve poor SWR of %f' % (float(swr[0][1])))
+                r, swr = self.__loopNudge(wsprFreq)
+                if r:
+                    # Good response
+                    if float(swr[0][1]) <= 1.7:
+                        print ('SWR now OK at %f' % float(swr[0][1]))
+                    else:
+                        print ('Failed to obtain good SWR, best obtained %f' % float(swr[0][1]))
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
         
@@ -1296,36 +1298,47 @@ class Automate:
             
         """
         
-        tries = 5
+        tries = 8
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if abs(diff) < 1000:
-                moveBy = 0.5
+                moveBy = 0.2
             elif abs(diff) < 3000:
                 moveBy = 1.0
             elif abs(diff) < 5000:
                 moveBy = 1.5
             else:
                 moveBy = 2.0
-            if diff > 0:
+            if diff > 0.0:
                 # Too low so need to nudge reverse
                 self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
             else:
                 # Too high so need to nudge forward
                 self.__loopControl.nudge((FORWARD, moveBy, 100, 900))
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
-                return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
+                print('Timeout waiting for loop nudge to respond to position change!')
+                return False, None
+            # See if the nudge worked
             r, swr = self.__getSWR(wsprFreq)
             if r:
-                break
+                if float(swr[0][1]) <= 1.7:
+                    # Good result
+                    return True, swr
+                else:
+                    # Not there yet
+                    print('Got SWR %f at try %d...' % (float(swr[0][1]), tries))
+            else:
+                print('Error getting SWR from VNA for frequency %d' % (wsprFreq))
+                return False, None
+            
+            # Time to give up?
             tries -= 1
             if tries <= 0:
-                return False, swr
-            
-        return True, swr
+                print('Maximum tries exceeded without achieving a good SWR')
+                return True, swr
     
     def __getSWR(self, freq):
         """
@@ -1339,13 +1352,7 @@ class Automate:
         # Query the VNA for SWR at the TX frequency
         r, swr = self.__doVNA(RQST_FSWR, freq)
         if r:
-            # Good response
-            if float(swr[0][1]) <= 1.7:
-                print ('SWR is OK at %f' % float(swr[0][1]))
-                return True, swr
-            else:
-                print ('SWR is too high at %f' % float(swr[0][1]))
-                return False, swr
+            return True, swr
         else:
             return False, None
                 
