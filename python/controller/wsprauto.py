@@ -666,9 +666,9 @@ class Automate:
         
         subcommand = params[0]
         if subcommand == SWITCH:
-            if len(params) != 2:
+            if len(params) != 3:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for antenna switch %s!' % (params)
-            return self.__doAntenna(params[0], params[1])
+            return self.__doAntenna(params[1], params[2])
         elif subcommand == SWR:
             # Switch the current antenna to the VNA
             return self.__doAntennaSWR(self.__antennaRoute[0], SS_VNA)
