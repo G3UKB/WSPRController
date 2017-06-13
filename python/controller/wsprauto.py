@@ -473,7 +473,7 @@ class Automate:
         
         # Stash the position information
         if 'pot' in msg:
-            _, self.__realExtension, self.__virtualExtension = message.split(':')
+            _, self.__realExtension, self.__virtualExtension = msg.split(':')
         
     def __catCallback(self, msg):
         """
@@ -1298,20 +1298,25 @@ class Automate:
             
         """
         
-        tries = 8
+        MAX_TRIES = 8
+        tries = MAX_TRIES
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if abs(diff) < 1000:
+                moveBy = 0.1
+            elif abs(diff) < 2000:
                 moveBy = 0.2
             elif abs(diff) < 3000:
-                moveBy = 1.0
+                moveBy = 0.3
+            elif abs(diff) < 4000:
+                moveBy = 0.4
             elif abs(diff) < 5000:
-                moveBy = 1.5
+                moveBy = 0.5
             else:
-                moveBy = 2.0
+                moveBy = 1.0
             if diff > 0.0:
                 # Too low so need to nudge reverse
                 self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
@@ -1329,7 +1334,7 @@ class Automate:
                     return True, swr
                 else:
                     # Not there yet
-                    print('Got SWR %f at try %d...' % (float(swr[0][1]), tries))
+                    print('Got SWR %f at try %d...' % (float(swr[0][1]), MAX_TRIES - tries + 1))
             else:
                 print('Error getting SWR from VNA for frequency %d' % (wsprFreq))
                 return False, None
