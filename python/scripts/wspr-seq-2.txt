@@ -147,6 +147,7 @@ WSPR: BAND, B_160
 MSG: Band switch completed
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 565
+LOOP: LOOP_ADJUST
 WSPR: SPOT, on
 MSG: Wait for 3 RX cycles
 WSPR: CYCLES, 2

@@ -131,6 +131,7 @@ WSPRRY: WSPRRY_WAIT
 MSG: WsprryPi not running/exited
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 565
+LOOP: LOOP_ADJUST
 MSG: Set LPF to 160m
 LPF: LPF-160
 MSG: Run two TX sequences followed by 2 transmission gaps
@@ -172,6 +173,7 @@ WSPRRY: WSPRRY_WAIT
 MSG: WsprryPi not running/exited
 MSG: Tune loop for 80m WSPR frequency
 LOOP: LOOP_BAND, LOOP-80, 305
+LOOP: LOOP_ADJUST
 MSG: Set LPF to 80m
 LPF: LPF-80
 MSG: Run two TX sequences followed by 2 transmission gaps

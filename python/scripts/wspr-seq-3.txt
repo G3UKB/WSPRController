@@ -123,6 +123,7 @@ MSG: Set antenna route 'loop to RPi (WsprryPi TX output)'
 ANTENNA: SWITCH, A_LOOP, SS_WSPRRYPI
 MSG: Tune loop for 160m WSPR frequency
 LOOP: LOOP_BAND, LOOP-160, 547
+LOOP: LOOP_ADJUST
 MSG: Set LPF to 160m
 LPF: LPF-160
 MSG: Run one TX sequences
@@ -138,6 +139,7 @@ WSPRRY: WSPRRY_WAIT
 MSG: WsprryPi not running/exited
 MSG: Tune loop for 80m WSPR frequency
 LOOP: LOOP_BAND, LOOP-80, 305
+LOOP: LOOP_ADJUST
 MSG: Set LPF to 80m
 LPF: LPF-80
 MSG: Run one TX sequences
