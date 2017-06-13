@@ -238,6 +238,9 @@ class Automate:
         self.__antennaRoute = (None, None)
         self.__wsprrypiFreqList = []
         self.__currentLoop = None
+        self.__realExtension = None
+        self.__virtualExtension = None
+        self.__loopExtension = {A_LOOP_160: None, A_LOOP_80: None}
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -446,7 +449,7 @@ class Automate:
         """
         
         try:
-            # This set comes from command completions via magcontrol
+            # This set comes from command completions via loop control
             if 'success' in msg:
                 # Completed, so reset
                 self.__loopEvt.set()
@@ -468,8 +471,9 @@ class Automate:
         
         """
         
-        # Ignore for now
-        pass
+        # Stash the position information
+        if 'pot' in msg:
+            _, self.__realExtension, self.__virtualExtension = message.split(':')
         
     def __catCallback(self, msg):
         """
@@ -1209,6 +1213,10 @@ class Automate:
         
         if antenna in ANTENNA_TO_LOOP_INTERNAL:
             internalAntennaName = ANTENNA_TO_LOOP_INTERNAL[antenna]
+            # See if we have a saved adjustment
+            if self.__loopExtension[internalAntennaName] != None:
+                # Yes, override the script setting
+                value = self.__loopExtension[internalAntennaName]
             self.__currentLoop = internalAntennaName
             if internalAntennaName == A_LOOP_160 or internalAntennaName == A_LOOP_80:
                 # Switch the relays to the selected antenna
@@ -1267,6 +1275,10 @@ class Automate:
                     print ('Failed to obtain good SWR best at %f' % float(swr[0][1]))
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
+        
+        # Save the final extension
+        if self.__realExtension != None:
+            self.__loopExtension[self.__currentLoop] = self.__realExtension
             
         # Switch the antenna back to its previous route
         r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
@@ -1290,15 +1302,22 @@ class Automate:
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
+            if abs(diff) < 1000:
+                moveBy = 0.5
+            elif abs(diff) < 3000:
+                moveBy = 1.0
+            elif abs(diff) < 5000:
+                moveBy = 1.5
+            else:
+                moveBy = 2.0
             if diff > 0:
                 # Too low so need to nudge reverse
-                self.__loopControl.nudge((REVERSE, 0.5, 100, 900))
+                self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
             else:
                 # Too high so need to nudge forward
-                self.__loopControl.nudge((FORWARD, 0.5, 100, 900))
+                self.__loopControl.nudge((FORWARD, moveBy, 100, 900))
             if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
                 return DISP_RECOVERABLE_ERROR, 'Timeout waiting for loop changeover to respond to position change!'
-            # Improve this!
             r, swr = self.__getSWR(wsprFreq)
             if r:
                 break
