@@ -1275,6 +1275,8 @@ class Automate:
                         print ('SWR now OK at %f' % float(swr[0][1]))
                     else:
                         print ('Failed to obtain good SWR, best obtained %f' % float(swr[0][1]))
+            else:
+                print('Good SWR at %f' % float(swr[0][1]))
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
         
