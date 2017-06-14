@@ -474,7 +474,9 @@ class Automate:
         
         # Stash the position information
         if 'pot' in msg:
-            _, self.__realExtension, self.__virtualExtension = msg.split(':')
+            _, realExtension, virtualExtension = msg.split(':')
+            self.__realExtension = int(realExtension)
+            self.__virtualExtension = int(virtualExtension)
         
     def __catCallback(self, msg):
         """
