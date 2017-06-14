@@ -1315,7 +1315,7 @@ class Automate:
         while True:
             # Get the current resonant frequency
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 20000, wsprFreq + 20000)
-            print('Required %d, resonant %d' % (wsprFreq, freq))
+            print('Required %d, resonant %d' % (wsprFreq, int(freq[0][0])))
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if abs(diff) < 500:
