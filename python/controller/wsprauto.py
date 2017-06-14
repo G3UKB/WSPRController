@@ -1222,8 +1222,8 @@ class Automate:
                 newValue = self.__loopExtension[internalAntennaName][0]
                 if abs(value - newValue) < MAX_VALUE_DEVIENCE:
                     # Probably OK to use last value
-                    value = newValue
                     print('Using calculated extension value for loop %s, [Script:%d, Calc:%d]' % (internalAntennaName, value, newValue))
+                    value = newValue
                 else:
                     # Seem to have wandered a long way off, reset to configured value
                     print('Resetting extension to script value for loop %s, [Script:%d, Calc:%d]' % (internalAntennaName, value, newValue))
