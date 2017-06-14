@@ -1314,23 +1314,24 @@ class Automate:
         tries = MAX_TRIES
         while True:
             # Get the current resonant frequency
-            r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
+            r, freq = self.__doVNA(RQST_FRES, wsprFreq - 20000, wsprFreq + 20000)
+            print('Required %d, resonant %d' % (wsprFreq, freq))
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if abs(diff) < 500:
                 moveBy = 0.0
             elif abs(diff) < 1000:
-                moveBy = 0.2
+                moveBy = 0.1
             elif abs(diff) < 2000:
-                moveBy = 0.3
+                moveBy = 0.2
             elif abs(diff) < 3000:
-                moveBy = 0.4
+                moveBy = 0.3
             elif abs(diff) < 4000:
-                moveBy = 0.5
+                moveBy = 0.4
             elif abs(diff) < 5000:
-                moveBy = 0.6
+                moveBy = 0.5
             else:
-                moveBy = 1.5
+                moveBy = 0.6
             if moveBy > 0.0:
                 if diff > 0.0:
                     # Too low so need to nudge reverse

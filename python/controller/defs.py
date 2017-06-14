@@ -297,7 +297,7 @@ ANTENNA_TO_LOOP_MATRIX = {
 # Loop actuator definitions
 FORWARD = 'forward'
 REVERSE = 'reverse'
-MAX_VALUE_DEVIENCE = 100
+MAX_VALUE_DEVIENCE = 300
 
 # ===============================================================================
 # VNA definitions
