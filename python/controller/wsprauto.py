@@ -476,7 +476,7 @@ class Automate:
         if 'pot' in msg:
             _, realExtension, virtualExtension = msg.split(':')
             self.__realExtension = int(realExtension)
-            self.__virtualExtension = int(virtualExtension)
+            self.__virtualExtension = float(virtualExtension)
         
     def __catCallback(self, msg):
         """
