@@ -1350,7 +1350,7 @@ class Automate:
                     return True, swr
                 else:
                     # Not there yet
-                    print('Got SWR %f at try %d...' % (float(swr[0][1]), MAX_TRIES - tries + 1))
+                    print('Got SWR %f at try %d with diff %d...' % (float(swr[0][1]), MAX_TRIES - tries + 1, diff))
             else:
                 print('Error getting SWR from VNA for frequency %d' % (wsprFreq))
                 return False, None
