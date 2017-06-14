@@ -1215,7 +1215,7 @@ class Automate:
         if antenna in ANTENNA_TO_LOOP_INTERNAL:
             internalAntennaName = ANTENNA_TO_LOOP_INTERNAL[antenna]
             # See if we have a saved adjustment
-            if self.__loopExtension[internalAntennaName] != None:
+            if self.__loopExtension[internalAntennaName][0] != None:
                 # Yes. Override the script setting?
                 newValue = self.__loopExtension[internalAntennaName][0]
                 if abs(value - newValue) < MAX_VALUE_DEVIENCE:
