@@ -1275,13 +1275,13 @@ class Automate:
         # Query the VNA for SWR at the TX frequency
         r, swr = self.__getSWR(wsprFreq)
         if r:
-            if float(swr[0][1]) > 1.7:
+            if float(swr[0][1]) > 2.0:
                 # Try to improve
                 print('Trying to improve poor SWR of %f' % (float(swr[0][1])))
                 r, swr = self.__loopNudge(wsprFreq)
                 if r:
                     # Good response
-                    if float(swr[0][1]) <= 1.7:
+                    if float(swr[0][1]) <= 2.0:
                         print ('SWR now OK at %f' % float(swr[0][1]))
                     else:
                         print ('Failed to obtain good SWR, best obtained %f' % float(swr[0][1]))
@@ -1318,17 +1318,17 @@ class Automate:
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
             if abs(diff) < 1000:
-                moveBy = 0.1
-            elif abs(diff) < 2000:
                 moveBy = 0.2
-            elif abs(diff) < 3000:
+            elif abs(diff) < 2000:
                 moveBy = 0.3
-            elif abs(diff) < 4000:
+            elif abs(diff) < 3000:
                 moveBy = 0.4
-            elif abs(diff) < 5000:
+            elif abs(diff) < 4000:
                 moveBy = 0.5
+            elif abs(diff) < 5000:
+                moveBy = 0.6
             else:
-                moveBy = 1.0
+                moveBy = 1.5
             if diff > 0.0:
                 # Too low so need to nudge reverse
                 self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
@@ -1341,7 +1341,7 @@ class Automate:
             # See if the nudge worked
             r, swr = self.__getSWR(wsprFreq)
             if r:
-                if float(swr[0][1]) <= 1.7:
+                if float(swr[0][1]) <= 2.0:
                     # Good result
                     return True, swr
                 else:
