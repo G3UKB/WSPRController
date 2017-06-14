@@ -240,7 +240,8 @@ class Automate:
         self.__currentLoop = None
         self.__realExtension = None
         self.__virtualExtension = None
-        self.__loopExtension = {A_LOOP_160: None, A_LOOP_80: None}
+        #                      {Loop: [Last extension, Best SWR], ...}
+        self.__loopExtension = {A_LOOP_160: [None, None], A_LOOP_80: [None, None]}
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -1215,8 +1216,15 @@ class Automate:
             internalAntennaName = ANTENNA_TO_LOOP_INTERNAL[antenna]
             # See if we have a saved adjustment
             if self.__loopExtension[internalAntennaName] != None:
-                # Yes, override the script setting
-                value = self.__loopExtension[internalAntennaName]
+                # Yes. Override the script setting?
+                newValue = self.__loopExtension[internalAntennaName][0]
+                if abs(value - newValue) < MAX_VALUE_DEVIENCE:
+                    # Probably OK to use last value
+                    value = newValue
+                else:
+                    # Seem to have wandered a long way off, reset to configured value
+                    print('Resetting extension for loop %s, [%d, %d]' % (internalAntennaName, value, newValue))
+                    self.__loopExtension[internalAntennaName][0] = value                    
             self.__currentLoop = internalAntennaName
             if internalAntennaName == A_LOOP_160 or internalAntennaName == A_LOOP_80:
                 # Switch the relays to the selected antenna
@@ -1280,9 +1288,9 @@ class Automate:
         else:
             return DISP_RECOVERABLE_ERROR, 'Error getting SWR from VNA for frequency %d' % (wsprFreq)
         
-        # Save the final extension
+        # Save the final extension and SWR
         if self.__realExtension != None:
-            self.__loopExtension[self.__currentLoop] = self.__realExtension
+            self.__loopExtension[self.__currentLoop] = [self.__realExtension, float(swr[0][1])]
             
         # Switch the antenna back to its previous route
         r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
