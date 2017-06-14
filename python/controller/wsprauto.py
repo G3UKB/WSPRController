@@ -1317,6 +1317,8 @@ class Automate:
             r, freq = self.__doVNA(RQST_FRES, wsprFreq - 10000, wsprFreq + 10000)
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
+            if abs(diff) < 500:
+                moveBy = 0.0
             if abs(diff) < 1000:
                 moveBy = 0.2
             elif abs(diff) < 2000:
@@ -1329,20 +1331,22 @@ class Automate:
                 moveBy = 0.6
             else:
                 moveBy = 1.5
-            if diff > 0.0:
-                # Too low so need to nudge reverse
-                self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
-            else:
-                # Too high so need to nudge forward
-                self.__loopControl.nudge((FORWARD, moveBy, 100, 900))
-            if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
-                print('Timeout waiting for loop nudge to respond to position change!')
-                return False, None
+            if moveBy > 0.0:
+                if diff > 0.0:
+                    # Too low so need to nudge reverse
+                    self.__loopControl.nudge((REVERSE, moveBy, 100, 900))
+                else:
+                    # Too high so need to nudge forward
+                    self.__loopControl.nudge((FORWARD, moveBy, 100, 900))
+                if not self.__loopEvt.wait(EVNT_TIMEOUT*2):
+                    print('Timeout waiting for loop nudge to respond to position change!')
+                    return False, None
             # See if the nudge worked
             r, swr = self.__getSWR(wsprFreq)
             if r:
-                if float(swr[0][1]) <= 2.0:
-                    # Good result
+                if float(swr[0][1]) <= 2.0 or moveBy == 0.0:
+                    # Best result
+                    print ('Best obtained %f at %d extension' % (float(swr[0][1]), self.__realExtension))
                     return True, swr
                 else:
                     # Not there yet
