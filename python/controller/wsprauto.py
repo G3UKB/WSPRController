@@ -1223,9 +1223,10 @@ class Automate:
                 if abs(value - newValue) < MAX_VALUE_DEVIENCE:
                     # Probably OK to use last value
                     value = newValue
+                    print('Using calculated extension value for loop %s, [Script:%d, Calc:%d]' % (internalAntennaName, value, newValue))
                 else:
                     # Seem to have wandered a long way off, reset to configured value
-                    print('Resetting extension for loop %s, [%d, %d]' % (internalAntennaName, value, newValue))
+                    print('Resetting extension to script value for loop %s, [Script:%d, Calc:%d]' % (internalAntennaName, value, newValue))
                     self.__loopExtension[internalAntennaName][0] = value                    
             self.__currentLoop = internalAntennaName
             if internalAntennaName == A_LOOP_160 or internalAntennaName == A_LOOP_80:
@@ -1318,10 +1319,8 @@ class Automate:
             print('Required %d, resonant %d' % (wsprFreq, int(freq[0][0])))
             diff = wsprFreq - int(freq[0][0])
             self.__loopEvt.clear()
-            if abs(diff) < 500:
+            if abs(diff) < 1000:
                 moveBy = 0.0
-            elif abs(diff) < 1000:
-                moveBy = 0.1
             elif abs(diff) < 2000:
                 moveBy = 0.2
             elif abs(diff) < 3000:
@@ -1331,7 +1330,7 @@ class Automate:
             elif abs(diff) < 5000:
                 moveBy = 0.5
             else:
-                moveBy = 0.6
+                moveBy = 0.8
             if moveBy > 0.0:
                 if diff > 0.0:
                     # Too low so need to nudge reverse
@@ -1360,6 +1359,7 @@ class Automate:
             tries -= 1
             if tries <= 0:
                 print('Maximum tries exceeded without achieving a good SWR')
+                print ('Best obtained %f at %d extension' % (float(swr[0][1]), self.__realExtension))
                 return True, swr
     
     def __getSWR(self, freq):
