@@ -1319,7 +1319,7 @@ class Automate:
             self.__loopEvt.clear()
             if abs(diff) < 500:
                 moveBy = 0.0
-            if abs(diff) < 1000:
+            elif abs(diff) < 1000:
                 moveBy = 0.2
             elif abs(diff) < 2000:
                 moveBy = 0.3
