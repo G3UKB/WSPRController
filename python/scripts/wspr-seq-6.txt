@@ -144,6 +144,7 @@ MSG: Switch band to 15m (wait for WSPR to be IDLE)...
 WSPR: BAND, B_15
 MSG: Band switch completed
 WSPR: SPOT, on
+WSPR: IDLE, off
 MSG: Wait for 2 RX cycles
 WSPR: CYCLES, 2
 
