@@ -951,7 +951,11 @@ class Automate:
         # Invoke fcdctl
         try:
             proc = subprocess.Popen(p)
-            proc.wait()
+            proc.wait(10.0)
+        except subprocess.TimeoutExpired:
+            # The process failed to complete
+            proc.terminate()
+            return DISP_RECOVERABLE_ERROR, 'FCDCTL process failed to complete command %s, forcing...' % (str(p))
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception starting FCDCTL [%s]' % (str(e)) % (params)
             
