@@ -235,7 +235,8 @@ class Automate:
         self.__cat  = None
         self.__loopControl = None
         self.__wsprTx = False
-        self.__antennaRoute = (None, None)
+        # Route = {InternalName:Sink, InternalName: Sink, ...}
+        self.__antennaRoute = {}
         self.__wsprrypiFreqList = []
         self.__currentLoop = None
         self.__realExtension = None
@@ -1144,7 +1145,9 @@ class Automate:
         # The key to the dictionary id antenna:sourceSink
         try:
             key = '%s:%s' % (antenna, sourceSink)
-            if save: self.__antennaRoute = (antenna, sourceSink)
+            if save:
+                self.__antennaRoute[antenna] = sourceSink
+                    
             matrix = ANTENNA_TO_SS_ROUTE[key]
             for relay, state in matrix.items():
                 if state != RELAY_NA:
@@ -1199,7 +1202,7 @@ class Automate:
             msg = 'Failed to find valid frequency for VNA [%s]' % (self.__wsprrypiFreqList)
             
         # Switch the antenna back to its previous route
-        r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
+        r = self.__restoreAntennaRoutes()
         if r != DISP_CONTINUE:
             return r, None
         
@@ -1265,7 +1268,7 @@ class Automate:
         """
         
         # Switch antenna to the VNA port
-        resp = self.__doAntenna(antenna, sourceSink, False) 
+        resp = self.__restoreAntennaRoutes()
         if resp[0] != DISP_CONTINUE:
             return resp
         
@@ -1300,7 +1303,7 @@ class Automate:
             self.__loopExtension[self.__currentLoop] = [self.__realExtension, float(swr[0][1])]
             
         # Switch the antenna back to its previous route
-        r = self.__doAntenna(self.__antennaRoute[0], self.__antennaRoute[1])
+        r = self.__restoreAntennaRoutes()
         if r != DISP_CONTINUE:
             return r, None
         
@@ -1494,7 +1497,15 @@ class Automate:
         except socket.timeout:
             # No VNA application or something failed
             return False, None
+    
+    def __restoreAntennaRoutes(self):
         
+        # Switch the antenna back to its previous route
+        for antenna in self.__antennaRoute:
+            r = self.__doAntenna(antenna, self.__antennaRoute[antenna])
+            if r != DISP_CONTINUE:
+                return r
+            
 """
 
 Event thread.
