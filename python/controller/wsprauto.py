@@ -1165,7 +1165,7 @@ class Automate:
             if antenna == A_LOOP:
                 if sourceSink == SS_FCD_PRO_PLUS:
                     self.__isLoopTX = False
-                elif sourceSink == SS_WSPRRYPI:
+                elif sourceSink == SS_WSPRRYPI or sourceSink == SS_IC7100:
                     self.__isLoopTX = True
             
         except Exception as e:
@@ -1281,7 +1281,7 @@ class Automate:
         """
         
         # Switch antenna to the VNA port
-        resp = r = self.__doAntenna(antenna, sourceSink, False)
+        resp = self.__doAntenna(antenna, sourceSink, False)
         if resp[0] != DISP_CONTINUE:
             return resp
         
@@ -1524,8 +1524,8 @@ class Automate:
         
         # Switch the antenna back to its previous route
         for antenna in self.__antennaRoute:
-            r = self.__doAntenna(antenna, self.__antennaRoute[antenna])
-            if r != DISP_CONTINUE:
+            resp = self.__doAntenna(antenna, self.__antennaRoute[antenna])
+            if resp[0] != DISP_CONTINUE:
                 return r
             
 """
