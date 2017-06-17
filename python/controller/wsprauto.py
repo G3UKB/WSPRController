@@ -243,6 +243,7 @@ class Automate:
         self.__virtualExtension = None
         #                      {Loop: [Last extension, Best SWR], ...}
         self.__loopExtension = {A_LOOP_160: [None, None], A_LOOP_80: [None, None]}
+        self.__isLoopTX = False
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -1158,6 +1159,14 @@ class Automate:
                     # ToDo, why do we need a long pause between switches, seems to be on relay 5 there is an issue
                     sleep(2.0)
             self.__relayEvt.clear()
+            
+            # Are we TX/RX on loop
+            if antenna == A_LOOP:
+                if sourceSink == SS_FCD_PRO_PLUS:
+                    self.__isLoopTX = False
+                elif sourceSink == SS_WSPRRYPI:
+                    self.__isLoopTX = True
+            
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception in antenna switching [%s]' % (str(e))
         
@@ -1188,7 +1197,10 @@ class Automate:
         for f in self.__wsprrypiFreqList:
             if f != '0':
                 # Translate to an actual frequency in Hz
-                wsprFreq = WSPRRY_TO_FREQ[f]
+                if self.__isLoopTX:
+                    wsprFreq = WSPR_BAND_TO_FREQ[f][1]
+                else:
+                    wsprFreq = WSPR_BAND_TO_FREQ[f][0]
                 # Query the VNA for SWR at the TX frequency
                 r, swr = self.__doVNA(RQST_FSWR, wsprFreq)
                 if r:
@@ -1268,21 +1280,30 @@ class Automate:
         """
         
         # Switch antenna to the VNA port
-        resp = self.__restoreAntennaRoutes()
+        resp = r = self.__doAntenna(antenna, sourceSink)
         if resp[0] != DISP_CONTINUE:
             return resp
         
         # Get the WSPR frequency for the current band
         if self.__currentLoop == A_LOOP_160:
-            wsprFreq = WSPRRY_TO_FREQ['160m']
+            if self.__isLoopTX:
+                wsprFreq = WSPRRY_TO_FREQ['160m'][1]
+            else:
+                wsprFreq = WSPRRY_TO_FREQ['160m'][0]
         elif self.__currentLoop == A_LOOP_80:
-            wsprFreq = WSPRRY_TO_FREQ['80m']
+            if self.__isLoopTX:
+                wsprFreq = WSPRRY_TO_FREQ['80m'][1]
+            else:
+                wsprFreq = WSPRRY_TO_FREQ['80m'][0]
         else:
             return DISP_RECOVERABLE_ERROR, 'Failed to find valid frequency for VNA [%d]' % (wsprFreq)
         
         # Query the VNA for SWR at the TX frequency
         r, swr = self.__getSWR(wsprFreq)
         if r:
+            if swr == '?':
+                # Failed to get an SWR!
+                return DISP_RECOVERABLE_ERROR, 'VNA returned "?" for SWR! [%d]' % (wsprFreq)
             if float(swr[0][1]) > 2.0:
                 # Try to improve
                 print('Trying to improve poor SWR of %f' % (float(swr[0][1])))
