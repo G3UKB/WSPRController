@@ -1287,14 +1287,14 @@ class Automate:
         # Get the WSPR frequency for the current band
         if self.__currentLoop == A_LOOP_160:
             if self.__isLoopTX:
-                wsprFreq = WSPRRY_TO_FREQ['160m'][1]
+                wsprFreq = WSPR_BAND_TO_FREQ['160m'][1]
             else:
-                wsprFreq = WSPRRY_TO_FREQ['160m'][0]
+                wsprFreq = WSPR_BAND_TO_FREQ['160m'][0]
         elif self.__currentLoop == A_LOOP_80:
             if self.__isLoopTX:
-                wsprFreq = WSPRRY_TO_FREQ['80m'][1]
+                wsprFreq = WSPR_BAND_TO_FREQ['80m'][1]
             else:
-                wsprFreq = WSPRRY_TO_FREQ['80m'][0]
+                wsprFreq = WSPR_BAND_TO_FREQ['80m'][0]
         else:
             return DISP_RECOVERABLE_ERROR, 'Failed to find valid frequency for VNA [%d]' % (wsprFreq)
         
