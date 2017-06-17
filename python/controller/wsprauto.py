@@ -676,7 +676,7 @@ class Automate:
             return self.__doAntenna(params[1], params[2])
         elif subcommand == SWR:
             # Switch the current antenna to the VNA
-            return self.__doAntennaSWR(self.__antennaRoute[0], SS_VNA)
+            return self.__doAntennaSWR(self.__antennaRoute[0], SS_VNA, False)
         
         return DISP_NONRECOVERABLE_ERROR, 'Invalid command to Antenna Switch %s!', params
     
@@ -1281,7 +1281,7 @@ class Automate:
         """
         
         # Switch antenna to the VNA port
-        resp = r = self.__doAntenna(antenna, sourceSink)
+        resp = r = self.__doAntenna(antenna, sourceSink, False)
         if resp[0] != DISP_CONTINUE:
             return resp
         
