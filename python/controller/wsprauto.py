@@ -1145,6 +1145,7 @@ class Automate:
         
         # The key to the dictionary id antenna:sourceSink
         try:
+            print('Setting antenna route: %s to %s' % (antenna, sourceSink))
             key = '%s:%s' % (antenna, sourceSink)
             if save:
                 self.__antennaRoute[antenna] = sourceSink
