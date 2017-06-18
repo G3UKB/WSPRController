@@ -302,7 +302,7 @@ class Automate:
             'PAUSE':  self.__pause,
             'MSG':  self.__message,
             'TIMESTAMP':  self.__timestamp,
-            'MODE': self.__modeTxRx,
+            'MODE': self.__rigMode,
             'LPF':  self.__lpf,
             'ANTENNA':  self.__antenna,
             'LOOP':  self.__loop,
@@ -650,7 +650,7 @@ class Automate:
         print('Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
         return DISP_CONTINUE, None
     
-    def __modeTxRx(self, params, index):
+    def __rigMode(self, params, index):
         """
         Are we TX or RX
         
