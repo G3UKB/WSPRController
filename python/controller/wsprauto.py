@@ -1526,7 +1526,7 @@ class Automate:
         for antenna in self.__antennaRoute:
             resp = self.__doAntenna(antenna, self.__antennaRoute[antenna])
             if resp[0] != DISP_CONTINUE:
-                return r
+                return resp[0]
             
 """
 
