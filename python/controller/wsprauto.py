@@ -660,12 +660,13 @@ class Automate:
         
         """
     
-        if len(params) != 3:
+        if len(params) != 2:
             return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for mode command %s' % (params)
         
-        _, mode, antenna = params
+        mode, antenna = params
         
         self.__modeTxRx = (mode, antenna)
+        return DISP_CONTINUE, None
         
     def __lpf(self, params, index):
         """
