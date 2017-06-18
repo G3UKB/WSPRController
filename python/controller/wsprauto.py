@@ -130,6 +130,8 @@ class Automate:
         ENDTIME     # End a time banded section
         PAUSE       # Pause the script file
         MSG         # Output a message to the console
+        TIMESTAMP   # Output a timestamp to the console
+        MODE:       # Current mode and antenna
         COMPLETE    # Script complete
       Hardware commands:
         LPF         # Commands related to the LPF filters
@@ -151,6 +153,9 @@ class Automate:
         ENDTIME:     SKIP to ENDTIME if time criteria not met
         PAUSE: n.n  # Pause execution for n.n seconds
         MSG: message# Output the message
+        TIMESTAMP:  # Output a timestamp
+        MODE: TX|RX, antenna
+                    # TX or RX on the antenna is imminent. Required to select correct frequency.
         COMPLETE:   # End of script
       Hardware commands:
         LPF: band   # Where band is LPF-160/LPF-80/LPF-40 etc. Mapping is involved to relay activation.
@@ -243,7 +248,7 @@ class Automate:
         self.__virtualExtension = None
         #                      {Loop: [Last extension, Best SWR], ...}
         self.__loopExtension = {A_LOOP_160: [None, None], A_LOOP_80: [None, None]}
-        self.__isLoopTX = False
+        self.__modeTxRx = None
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -296,6 +301,8 @@ class Automate:
             'ENDTIME':  self.__stoptime,
             'PAUSE':  self.__pause,
             'MSG':  self.__message,
+            'TIMESTAMP':  self.__timestamp,
+            'MODE': self.__modeTxRx,
             'LPF':  self.__lpf,
             'ANTENNA':  self.__antenna,
             'LOOP':  self.__loop,
@@ -630,6 +637,36 @@ class Automate:
         print(message)
         return DISP_CONTINUE, None
 
+    def __timestamp(self, params, index):
+        """
+        Output a timestamp
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+        
+        print('Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+        return DISP_CONTINUE, None
+    
+    def __modeTxRx(self, params, index):
+        """
+        Are we TX or RX
+        
+        Arguments:
+            params      --  params for this command
+            index       --  current index into command structure
+        
+        """
+    
+        if len(params) != 3:
+            return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for mode command %s' % (params)
+        
+        _, mode, antenna = params
+        
+        self.__modeTxRx = (mode, antenna)
+        
     def __lpf(self, params, index):
         """
         Select a low pass filter
@@ -1161,13 +1198,6 @@ class Automate:
                     sleep(2.0)
             self.__relayEvt.clear()
             
-            # Are we TX/RX on loop
-            if antenna == A_LOOP:
-                if sourceSink == SS_FCD_PRO_PLUS:
-                    self.__isLoopTX = False
-                elif sourceSink == SS_WSPRRYPI or sourceSink == SS_IC7100:
-                    self.__isLoopTX = True
-            
         except Exception as e:
             return DISP_NONRECOVERABLE_ERROR, 'Exception in antenna switching [%s]' % (str(e))
         
@@ -1198,7 +1228,7 @@ class Automate:
         for f in self.__wsprrypiFreqList:
             if f != '0':
                 # Translate to an actual frequency in Hz
-                if self.__isLoopTX:
+                if self.__modeTxRx == (TX, A_LOOP):
                     wsprFreq = WSPR_BAND_TO_FREQ[f][1]
                 else:
                     wsprFreq = WSPR_BAND_TO_FREQ[f][0]
@@ -1287,12 +1317,12 @@ class Automate:
         
         # Get the WSPR frequency for the current band
         if self.__currentLoop == A_LOOP_160:
-            if self.__isLoopTX:
+            if self.__modeTxRx == (TX, A_LOOP):
                 wsprFreq = WSPR_BAND_TO_FREQ['160m'][1]
             else:
                 wsprFreq = WSPR_BAND_TO_FREQ['160m'][0]
         elif self.__currentLoop == A_LOOP_80:
-            if self.__isLoopTX:
+            if self.__modeTxRx == (TX, A_LOOP):
                 wsprFreq = WSPR_BAND_TO_FREQ['80m'][1]
             else:
                 wsprFreq = WSPR_BAND_TO_FREQ['80m'][0]

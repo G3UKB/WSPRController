@@ -51,6 +51,8 @@ TIME        = 'TIME'        # Start a time banded section
 ENDTIME     = 'ENDTIME'     # End a time banded section
 PAUSE       = 'PAUSE'       # Pause the script file
 MSG         = 'MSG'         # Output a message
+TIMESTAMP   = 'TIMESTAMP'   # Output a timestamp
+MODE        = 'MODE'        # Mode TX or RX on given antenna
 COMPLETE    = 'COMPLETE'    # Script complete
 
 LPF         = 'LPF'         # Commands related to the LPF filters
@@ -298,6 +300,11 @@ ANTENNA_TO_LOOP_MATRIX = {
 FORWARD = 'forward'
 REVERSE = 'reverse'
 MAX_VALUE_DEVIENCE = 300
+
+# ===============================================================================
+# Mode definitions
+TX = 'TX'
+RX = 'RX'
 
 # ===============================================================================
 # VNA definitions
