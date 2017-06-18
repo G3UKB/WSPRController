@@ -666,6 +666,7 @@ class Automate:
         mode, antenna = params
         
         self.__modeTxRx = (mode, antenna)
+        print('Setting %s mode for antenns %s' % (mode, antenna))
         return DISP_CONTINUE, None
         
     def __lpf(self, params, index):
