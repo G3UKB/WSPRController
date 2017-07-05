@@ -1,2 +1,2 @@
 # WSPRController
-Controlls band switching, antenna switcing etc for an automated WSPR station.
+Controlls band switching, antenna switching etc for an automated WSPR station.
