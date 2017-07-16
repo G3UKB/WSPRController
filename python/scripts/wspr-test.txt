@@ -61,24 +61,24 @@
 #WSPR: INVOKE
 #PAUSE: 5.0
 # IQ test
-#WSPR: IQ, on
-#MSG: IQ on
-#PAUSE: 10.0
 #WSPR: IQ, off
 #MSG: IQ off
 #PAUSE: 10.0
+#WSPR: IQ, on
+#MSG: IQ on
+#PAUSE: 10.0
 # Audio in test
-#WSPR: AUDIOIN, 3 USB PnP Sound Device: Audio (hw:2,0)
+#WSPR: AUDIOIN, "3 USB PnP Sound Device: Audio (hw:2,0)"
 #MSG: Audio in dongle
 #PAUSE: 10.0
-#WSPR: AUDIOIN, 2 FUNcube Dongle V2.034: USB Audio (hw:1,0)
+#WSPR: AUDIOIN, "2 FUNcube Dongle V2.034: USB Audio (hw:1,0)"
 #MSG: Audio in FCD
 #PAUSE: 10.0
 # Audio out test
-#WSPR: AUDIOOUT, 3 USB PnP Sound Device: Audio (hw:2,0)
+#WSPR: AUDIOOUT, "3 USB PnP Sound Device: Audio (hw:2,0)"
 #MSG: Audio out dongle
 #PAUSE: 10.0
-#WSPR: AUDIOOUT, 6 default
+#WSPR: AUDIOOUT, "6 default"
 #MSG: Audio out default
 #PAUSE: 10.0
 # IDLE test

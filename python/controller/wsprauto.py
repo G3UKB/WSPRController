@@ -384,7 +384,7 @@ class Automate:
                     if len(remainder) > 0:
                         if remainder[0] == '"' and remainder[-1] == '"':
                             # Treat as a single string
-                            self.__script[index][1].append(remainder.strip())
+                            self.__script[index][1].append(remainder[1:len(remainder)-1].strip())
                         else:
                             toks = remainder.split(',')
                             for tok in toks:
