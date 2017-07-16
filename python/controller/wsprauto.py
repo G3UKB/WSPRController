@@ -374,7 +374,7 @@ class Automate:
                     continue
                 line = line.strip('\n\r')
                 if len(line) == 0: continue
-                cmd, remainder = line.split(':')
+                cmd, remainder = line.split(':', 1)
                 self.__script.append([])
                 self.__script[index].append(cmd)
                 self.__script[index].append([])
@@ -382,9 +382,13 @@ class Automate:
                     self.__script[index][1].append(remainder.strip())
                 else:
                     if len(remainder) > 0:
-                        toks = remainder.split(',')
-                        for tok in toks:
-                            self.__script[index][1].append(tok.strip())
+                        if remainder[0] == '"' and remainder[-1] == '"':
+                            # Treat as a single string
+                            self.__script[index][1].append(remainder.strip())
+                        else:
+                            toks = remainder.split(',')
+                            for tok in toks:
+                                self.__script[index][1].append(tok.strip())
                 index += 1
         except Exception as e:
             print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
