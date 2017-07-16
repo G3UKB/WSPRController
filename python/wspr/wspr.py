@@ -1022,6 +1022,7 @@ def update():
             if 'iqmode' in asciidata:
                 _, iqmode = asciidata.split(':')
                 iqmode = int(iqmode)
+                print('wspr iqmode', iqmode)
                 if iqmode == 0:
                     iq.iqmode.set(0)
                 else:

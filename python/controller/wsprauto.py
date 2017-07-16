@@ -182,7 +182,7 @@ class Automate:
         WSPR:   INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
                 RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
-                IQ, on/off              # Set IQ mode on/off. Must match audio selection.
+                IQ, on|off              # Set IQ mode on/off. Must match audio selection.
                 AUDIOIN, <descriptor>   # Set audio in to value of <descriptor>
                                             Must be same as value in dropdown i.e. '4 Microphone (4- USB Audio CODEC)'
                 AUDIOOUT, <descriptor>  # Set audio out to value of <descriptor>
@@ -837,17 +837,18 @@ class Automate:
             _, state = params
             if state == 'on': state = True
             elif state == 'off': state = False
-            self.__doWSPRIQ(state)
+            else: return DISP_NONRECOVERABLE_ERROR, 'WSPR IQ command must be "on" or "off" %s!' % (params)
+            return self.__doWSPRIQ(state)
         elif subcommand == AUDIOIN:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR AUDIOIN %s!' % (params)
             _, descriptor = params
-            self.__doWSPRAudioIn(descriptor)
+            return self.__doWSPRAudioIn(descriptor)
         elif subcommand == AUDIOOUT:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR AUDIOOUT %s!' % (params)
             _, descriptor = params
-            self.__doWSPRAudioOut(descriptor)
+            return self.__doWSPRAudioOut(descriptor)
         elif subcommand == BAND:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR BAND %s!' % (params)
