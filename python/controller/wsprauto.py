@@ -382,13 +382,19 @@ class Automate:
                     self.__script[index][1].append(remainder.strip())
                 else:
                     if len(remainder) > 0:
-                        if remainder[0] == '"' and remainder[-1] == '"':
-                            # Treat as a single string
-                            self.__script[index][1].append(remainder[1:len(remainder)-1].strip())
-                        else:
-                            toks = remainder.split(',')
-                            for tok in toks:
-                                self.__script[index][1].append(tok.strip())
+                        # Strip off any sub-command
+                        toks = remainder.split(',', 1)
+                        self.__script[index][1].append(toks[0].strip())
+                        if len(toks) > 1:
+                            # We have more parameters
+                            params = toks[1]                 
+                            if params[0] == '"' and params[-1] == '"':
+                                # Treat as a single string
+                                self.__script[index][1].append(remainder[1:len(remainder)-1].strip())
+                            else:
+                                toks = params.split(',')
+                                for tok in toks:
+                                    self.__script[index][1].append(tok.strip())
                 index += 1
         except Exception as e:
             print('Error in file processing [%s][%s][%s]' % (self.__scriptPath, str(e), traceback.format_exc()))
