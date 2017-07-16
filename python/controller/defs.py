@@ -78,6 +78,9 @@ INVOKE      = 'INVOKE'      # Invoke WSPR if not running. Must be running before
 RESET       = 'RESET'       # Reset
 IDLE        = 'IDLE'        # Set idle on/off, i.e stop RX/TX
 
+IQ          = 'IQ'          # Set IQ on/off
+AUDIOIN     = 'AUDIOIN'     # Set audio in
+AUDIOOUT    = 'AUDIOOUT'    # Set audio out
 BAND        = 'BAND'        # Set band for reporting
 B_160       = 'B-160'
 B_80        = 'B-80'
