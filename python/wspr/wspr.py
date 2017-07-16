@@ -1027,7 +1027,7 @@ def update():
                 else:
                     iq.iqmode.set(1)
             elif 'audioin' in asciidata:
-                _, descriptor = asciidata.split(':')
+                _, descriptor = asciidata.split(':', 1)
                 g.DevinName.set(descriptor)
                 try:
                     g.ndevin.set(int(descriptor[:2]))
@@ -1035,7 +1035,7 @@ def update():
                     g.ndevin.set(0)
                 options.DevinName.set(descriptor)
             elif 'audioout' in asciidata:
-                _, descriptor = asciidata.split(':')
+                _, descriptor = asciidata.split(':', 1)
                 g.DevoutName.set(value)
                 try:
                     g.ndevout.set(int(value[:2]))
