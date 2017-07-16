@@ -1019,6 +1019,7 @@ def update():
             #   'upload:n'  where n=0 (don't upload spots), n=1 (upload spots)
             #   'reset'     Something went wrong so reset to a start state
             
+            print(asciidata)
             if 'iqmode' in asciidata:
                 _, iqmode = asciidata.split(':')
                 iqmode = int(iqmode)
