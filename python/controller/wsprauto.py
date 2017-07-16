@@ -182,6 +182,11 @@ class Automate:
         WSPR:   INVOKE                  # Invoke WSPR if not running. Must be running before any other WSPR command.
                 RESET                   # Reset
                 IDLE, on|off            # Set idle on/off, i.e stop RX/TX
+                IQ, on/off              # Set IQ mode on/off. Must match audio selection.
+                AUDIOIN, <descriptor>   # Set audio in to value of <descriptor>
+                                            Must be same as value in dropdown i.e. '4 Microphone (4- USB Audio CODEC)'
+                AUDIOOUT, <descriptor>  # Set audio out to value of <descriptor>
+                                            Must be same as value in dropdown i.e. '11 Speakers (4- USB Audio CODEC )'
                 BAND, B_160 etc ...     # Set band for reporting
                 TX, on|off              # Set TX to 20% or 0%
                 POWER, nn.nn, nn.nn     # Available, required. Adjust power output when using external radio TX
@@ -826,6 +831,23 @@ class Automate:
             elif state == 'off': state = False
             else: return DISP_NONRECOVERABLE_ERROR, 'WSPR IDLE command must be "on" or "off" %s!' % (params)
             return self.__doWSPRIdle(state)
+        elif subcommand == IQ:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR IQ %s!' % (params)
+            _, state = params
+            if state == 'on': state = True
+            elif state == 'off': state = False
+            self.__doWSPRIQ(state)
+        elif subcommand == AUDIOIN:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR AUDIOIN %s!' % (params)
+            _, descriptor = params
+            self.__doWSPRAudioIn(descriptor)
+        elif subcommand == AUDIOOUT:
+            if len(params) != 2:
+                return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR AUDIOOUT %s!' % (params)
+            _, descriptor = params
+            self.__doWSPRAudioOut(descriptor)
         elif subcommand == BAND:
             if len(params) != 2:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for WSPR BAND %s!' % (params)
@@ -1019,6 +1041,50 @@ class Automate:
     
     # =================================================================================
     # WSPR
+    def __doWSPRIQ(self, mode):
+        """
+        Instruct WSPR to set the IQ mode to on or off
+        
+        Arguments:
+            mode    --  True = on, False = off
+            
+        """
+        
+        if mode: cmd = 1
+        else: cmd = 0
+        # Do IQ command
+        self.__cmdSock.sendto(('iqmode:%d' % cmd).encode('utf-8'), (CMD_IP, CMD_PORT))
+        
+        return DISP_CONTINUE, None
+    
+    def __doWSPRAudioIn(self, descriptor):
+        """
+        Instruct WSPR to set the audio in channel
+        
+        Arguments:
+            descriptor    --  full audio descriptor
+            
+        """
+        
+        # Do audio in command
+        self.__cmdSock.sendto(('audioin:%s' % descriptor).encode('utf-8'), (CMD_IP, CMD_PORT))
+        
+        return DISP_CONTINUE, None
+    
+    def __doWSPRAudioOut(self, descriptor):
+        """
+        Instruct WSPR to set the audio out channel
+        
+        Arguments:
+            descriptor    --  full audio descriptor
+            
+        """
+        
+        # Do audio in command
+        self.__cmdSock.sendto(('audioout:%s' % descriptor).encode('utf-8'), (CMD_IP, CMD_PORT))
+        
+        return DISP_CONTINUE, None
+    
     def __doWSPRBand(self, band):
         """
         Instruct WSPR to change band.

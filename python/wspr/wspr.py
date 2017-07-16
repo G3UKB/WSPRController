@@ -848,9 +848,9 @@ def update():
         bandmap,bm,t0,nreject,gain,phdeg,ierr,itx0,timer1,ndecoding0, \
         hopping0,ntune0,startup,nred
 
-    # RAC
+    # Added - Bob Cowdery (G3UKB)
     global lastBndCmd, extAddr, lastState, allowSwitch
-    # RAC
+    # End - Bob Cowdery (G3UKB)
     
     tsec=time.time()
     utc=time.gmtime(tsec)
@@ -1009,13 +1009,40 @@ def update():
             data, extAddr = extsock.recvfrom(100)
             asciidata = data.decode(encoding='UTF-8')
             # Commands are as follows:
+            #   'iqmode:n' where n=0 (IQ off), n=1 (IQ on)
+            #   'audioin:<descriptor>'
+            #   'audioout:<descriptor>'
             #   'band:n'    where n is 2 (160m) - 14 (2m)
             #   'tx:n'      where n=0 (no TX), n=1 (20% TX)
             #   'power:n    where n is the dBm reduction
             #   'idle:n     where n=0 (set IDLE), n=1 (set RUN)
             #   'upload:n'  where n=0 (don't upload spots), n=1 (upload spots)
             #   'reset'     Something went wrong so reset to a start state
-            if 'band' in asciidata:
+            
+            if 'iqmode' in asciidata:
+                _, iqmode = asciidata.split(':')
+                iqmode = int(iqmode)
+                if iqmode == 0:
+                    iq.iqmode.set(0)
+                else:
+                    iq.iqmode.set(1)
+            elif 'audioin' in asciidata:
+                _, descriptor = asciidata.split(':')
+                g.DevinName.set(descriptor)
+                try:
+                    g.ndevin.set(int(descriptor[:2]))
+                except:
+                    g.ndevin.set(0)
+                options.DevinName.set(descriptor)
+            elif 'audioout' in asciidata:
+                _, descriptor = asciidata.split(':')
+                g.DevoutName.set(value)
+                try:
+                    g.ndevout.set(int(value[:2]))
+                except:
+                    g.ndevout.set(0)
+                options.DevoutName.set(value)
+            elif 'band' in asciidata:
                 _, asciiband = asciidata.split(':')
                 ibandno = int(asciiband)
                 if ibandno >= 2 and  ibandno <= 14:
