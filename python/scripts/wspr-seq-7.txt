@@ -21,7 +21,7 @@ MSG: Set antenna route 'EFD to IC7100 Ant 1'
 ANTENNA: SWITCH, A_EFD_80_10, SS_IC7100
 PAUSE: 3
 MSG: Set the CAT parameters
-RADIO: IC7100, /dev/ttyACM0, 19200
+RADIO: CAT, IC7100, /dev/ttyACM0, 19200
 PAUSE: 3
 MSG: Set the radio band and mode
 RADIO: BAND, B_40

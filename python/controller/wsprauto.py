@@ -391,7 +391,8 @@ class Automate:
                             params = params.strip()
                             if params[0] == '"' and params[-1] == '"':
                                 # Treat as a single string
-                                self.__script[index][1].append(params[1:len(params)-1].strip())
+                                self.__script[index][1].append(params[1:len(params
+                                                                            )-1].strip())
                             else:
                                 toks = params.split(',')
                                 for tok in toks:
