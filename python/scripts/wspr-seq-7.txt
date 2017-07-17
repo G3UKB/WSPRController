@@ -1,0 +1,37 @@
+#====================
+# TX IC7100 - 40m,
+# RX IC7100 -      40m
+#====================
+
+MSG: Starting WSPR script
+
+MSG: Initialise WSPR program
+WSPR: INVOKE
+PAUSE: 5
+WSPR: IDLE, on
+WSPR: TX, off
+WSPR: POWER, 10.0, 0.1
+WSPR: SPOT, off
+PAUSE: 5
+
+MSG:
+MSG:
+
+MSG: Set antenna route 'EFD to IC7100 Ant 1'
+ANTENNA: SWITCH, A_EFD_80_10, SS_IC7100
+MSG: Set the CAT parameters
+RADIO: CAT, IC7100, COM1, 9600
+RADIO: BAND, 7.1
+RADIO: MODE, USB
+MSG: Setup WSPR
+WSPR: INVOKE
+PAUSE: 5
+WSPR: IQ, off
+WSPR: AUDIOIN, ???
+WSPR: AUDIOOUT, ???
+WSPR: BAND, B_40
+WSPR: TX, on
+WSPR: POWER, 10.0, 0.1
+WSPR: SPOT, on
+
+COMPLETE:
