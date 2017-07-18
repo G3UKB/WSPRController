@@ -793,7 +793,7 @@ class Automate:
         elif subcommand == LOOP_ADJUST:
             return self.__doLoopAdjust(A_LOOP, SS_VNA)
         
-        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to Loop %s!', params
+        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to Loop %s!' % (params)
     
     def __radio(self, params, index):
         """
@@ -905,7 +905,7 @@ class Automate:
             else: return DISP_NONRECOVERABLE_ERROR, 'WSPR SPOT command must be "on" or "off" %s!' % (params)
             return self.__doWSPRSpot(state)
         
-        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to WSPR %s!', params
+        return DISP_NONRECOVERABLE_ERROR, 'Invalid command to WSPR %s!' % params
     
     def __wsprry(self, params, index):
         """

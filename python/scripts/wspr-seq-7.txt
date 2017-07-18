@@ -27,12 +27,11 @@ MSG: Set the radio band and mode
 RADIO: BAND, B_40
 RADIO: MODE, MODE_USB
 PAUSE: 3
-MSG: Setup WSPR
-WSPR: INVOKE
-PAUSE: 5
+MSG: Setup WSPR IQ off and audio in/out devices
 WSPR: IQ, off
 WSPR: AUDIOIN, "3 USB Audio CODEC: - (hw:2,0)"
 WSPR: AUDIOOUT, "3 USB Audio CODEC: - (hw:2,0)"
+MSG: Set band, TX on, power reduction and spot on
 WSPR: BAND, B_40
 WSPR: TX, on
 WSPR: POWER, 10.0, 0.1
@@ -40,7 +39,7 @@ WSPR: SPOT, on
 
 MSG: Waiting for cycles as WSPR is in charge now
 SEQ: -1
-WSPR: WAIT, 10
+WSPR: CYCLES, 10
 MSG: 10 RX cycles completed 
 ENDSEQ:
 
