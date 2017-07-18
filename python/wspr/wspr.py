@@ -1118,10 +1118,22 @@ def update():
         elif transmitting: currentState = S_TX
         else: currentState = S_IDLE
         if lastState != currentState:
-            if lastState == S_RX and currentState == S_IDLE:
+            if lastState == S_TX or lastState == S_IDLE and currentState == S_RX:
+                # Start of RX cycle
+                if extAddr != None:
+                    evtsock.sendto('rx-cycle-start'.encode('UTF-8'), (extAddr[0], EVT_PORT))
+            elif lastState == S_RX and currentState == S_IDLE:
                 # End of a receive cycle
                 if extAddr != None:
-                    evtsock.sendto('cycle'.encode('UTF-8'), (extAddr[0], EVT_PORT))
+                    evtsock.sendto('rx-cycle-end'.encode('UTF-8'), (extAddr[0], EVT_PORT))
+            elif lastState == S_RX or lastState == S_IDLE and currentState == S_TX:
+                # Start of TX cycle
+                if extAddr != None:
+                    evtsock.sendto('tx-cycle-start'.encode('UTF-8'), (extAddr[0], EVT_PORT))
+            elif lastState == S_TX and currentState == S_IDLE or currentState == S_RX:
+                # End of TX cycle
+                if extAddr != None:
+                    evtsock.sendto('tx-cycle-end'.encode('UTF-8'), (extAddr[0], EVT_PORT))
         lastState = currentState
         
         # End - Bob Cowdery (G3UKB)

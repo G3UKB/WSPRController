@@ -42,8 +42,8 @@ WSPR: IDLE, off
 MSG:
 MSG: Waiting for cycles as WSPR is in charge now
 SEQ: -1
-WSPR: CYCLES, 10
-MSG: 10 RX cycles completed 
+WSPR: CYCLES, 1
+MSG: RX cycle completed 
 ENDSEQ:
 
 COMPLETE:

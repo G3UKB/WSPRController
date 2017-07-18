@@ -254,6 +254,7 @@ class Automate:
         #                      {Loop: [Last extension, Best SWR], ...}
         self.__loopExtension = {A_LOOP_160: [None, None], A_LOOP_80: [None, None]}
         self.__modeTxRx = None
+        self.__radioTXState = False
         
         # Create the antenna controller
         self.__antControl = antcontrol.AntControl(ANT_CTRL_ARDUINO_ADDR, ANT_CTRL_RELAY_DEFAULT_STATE, self.__antControlCallback)
@@ -451,8 +452,17 @@ class Automate:
                 _, bandNo = evnt.split(':')
                 if int(bandNo) == self.__waitingBandNo:
                     self.__bandEvt.set()
-        elif 'cycle' in evnt:
+        elif 'rx-cycle-start' in evnt:
+            self.__radioTXState = False
+            self.__cat.do_command(CAT_PTT, False) 
+        elif 'rx-cycle-end' in evnt:
             self.__cycleEvt.set()
+        elif 'tx-cycle-start' in evnt:
+            self.__radioTXState = True
+            self.__cat.do_command(CAT_PTT, True)
+        elif 'tx-cycle-end' in evnt:
+            self.__radioTXState = False
+            self.__cat.do_command(CAT_PTT, False) 
     
     def __antControlCallback(self, msg):
         """
