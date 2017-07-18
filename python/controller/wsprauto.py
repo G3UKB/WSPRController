@@ -1563,6 +1563,7 @@ class Automate:
                 return DISP_NONRECOVERABLE_ERROR, 'Wrong number of parameters for radio subcommand %s!' % (params)
             else:
                 _, mode = params
+                mode = MODE_LOOKUP[mode]
                 self.__catEvt.clear()
                 self.__cat.do_command(CAT_MODE_SET, mode)
                 if not self.__catEvt.wait(EVNT_TIMEOUT*2):

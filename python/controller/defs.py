@@ -225,6 +225,23 @@ BAND_TO_FREQ = {
 # Offset to account for FCD IF of 12KHz
 FCD_IF = 0.012
 
+# ================================================================================
+# Mode lookup
+MODE_LOOKUP = {
+    'MODE_LSB': 'lsb',
+    'MODE_USB': 'usb',
+    'MODE_CW': 'cw',
+    'MODE_CWR': 'cwr',
+    'MODE_AM': 'am',
+    'MODE_FM': 'fm',
+    'MODE_DIG': 'dig',
+    'MODE_PKT': 'pkt',
+    'MODE_RTTY': 'rtty',
+    'MODE_RTTYR': 'rttyr',
+    'MODE_WFM': 'wfm',
+    'MODE_DV': 'dv'
+}
+
 # ===============================================================================
 # Antenna definitions
 # Note this depends on what you have available and what switching arrangement you have
