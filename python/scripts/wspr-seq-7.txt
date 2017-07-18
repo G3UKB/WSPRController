@@ -15,18 +15,19 @@ WSPR: SPOT, off
 PAUSE: 5
 
 MSG:
-MSG:
-
 MSG: Set antenna route 'EFD to IC7100 Ant 1'
 ANTENNA: SWITCH, A_EFD_80_10, SS_IC7100
 PAUSE: 3
+MSG:
 MSG: Set the CAT parameters
 RADIO: CAT, IC7100, /dev/ttyUSB0, 19200
 PAUSE: 3
+MSG:
 MSG: Set the radio band and mode
 RADIO: BAND, B_40
 RADIO: MODE, MODE_USB
 PAUSE: 3
+MSG:
 MSG: Setup WSPR IQ off and audio in/out devices
 WSPR: IQ, off
 WSPR: AUDIOIN, "3 USB Audio CODEC: - (hw:2,0)"
@@ -36,7 +37,9 @@ WSPR: BAND, B_40
 WSPR: TX, on
 WSPR: POWER, 10.0, 0.1
 WSPR: SPOT, on
+WSPR: IDLE, off
 
+MSG:
 MSG: Waiting for cycles as WSPR is in charge now
 SEQ: -1
 WSPR: CYCLES, 10
