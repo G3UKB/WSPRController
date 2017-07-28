@@ -454,15 +454,15 @@ class Automate:
                     self.__bandEvt.set()
         elif 'rx-cycle-start' in evnt:
             self.__radioTXState = False
-            self.__cat.do_command(CAT_PTT, False) 
+            if self.__cat != None: self.__cat.do_command(CAT_PTT, False) 
         elif 'rx-cycle-end' in evnt:
             self.__cycleEvt.set()
         elif 'tx-cycle-start' in evnt:
             self.__radioTXState = True
-            self.__cat.do_command(CAT_PTT, True)
+            if self.__cat != None: self.__cat.do_command(CAT_PTT, True)
         elif 'tx-cycle-end' in evnt:
             self.__radioTXState = False
-            self.__cat.do_command(CAT_PTT, False) 
+            if self.__cat != None: self.__cat.do_command(CAT_PTT, False) 
     
     def __antControlCallback(self, msg):
         """
