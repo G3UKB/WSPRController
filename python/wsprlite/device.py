@@ -122,8 +122,8 @@ import binascii
 import struct
 from time import sleep
 
-# g_device = '/dev/ttyUSB0'
-g_device = 'COM5'
+g_device = '/dev/ttyUSB0'
+#g_device = 'COM5'
 
 class WSPRLite(object):
     
@@ -169,7 +169,9 @@ class WSPRLite(object):
         msg = bytearray(b'\x01\x03\x00\x06\x00')
         msg = msg + crc + bytearray(b'\x04')
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        resp = self.__ser.readline()
+        f = resp[4:12]
+        print(struct.unpack('<Q',f)[0])
     
     """
     ### Write
@@ -186,6 +188,17 @@ class WSPRLite(object):
         Reply: ACK or NACK.
     """
     
+    def set_freq(self, freq):
+        # Freq is a float
+        # This needs to be a 64 bit byte array in LE
+        f = int(freq*1000000)
+        f_bytes = struct.pack('<Q', f)
+        crc = self.calc_crc_32(b'\x05\x00\x06\x00' + f_bytes)
+        msg = bytearray(b'\x01\x05\x00\x06\x00' + f_bytes)
+        msg = msg + crc + bytearray(b'\x04')
+        self.__ser.write(msg)
+        print(self.__ser.readline())
+
     def set_tx(self):
         crc = self.calc_crc_32(b'\x11\x00\x02\x00')
         msg = bytearray(b'\x01\x11\x00\x02\x00')
@@ -206,6 +219,8 @@ class WSPRLite(object):
 lite = WSPRLite()
 lite.get_callsign()
 lite.get_locator()
+lite.get_freq()
+lite.set_freq(7.097066)
 lite.get_freq()
 lite.set_tx()
 sleep(3)
