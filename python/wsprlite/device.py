@@ -229,7 +229,7 @@ import os,sys
 import serial
 import binascii
 import struct
-from enum import Enum
+from enum import Enum, auto
 from time import sleep
 
 #========================================================================
@@ -282,14 +282,14 @@ class VarId(Enum):
 # The device mode
 class DeviceMode(Enum):
     Init = b'\x00\x00'
-    WSPR_Pending = b'\x00\x00'
-    WSPR_Active = b'\x01\x00'
-    WSPR_Invalid = b'\x02\x00'
-    Test_ConstantTx = b'\x03\x00'
-    FactoryInvalid = b'\x04\x00'
-    HardwareFail = b'\x05\x00'
-    FirmwareError = b'\x006\x00'
-    WSPR_MorseIdent = b'\x07\x00'
+    WSPR_Pending = b'\x01\x00'
+    WSPR_Active = b'\x02\x00'
+    WSPR_Invalid = b'\x03\x00'
+    Test_ConstantTx = b'\x04\x00'
+    FactoryInvalid = b'\x05\x00'
+    HardwareFail = b'\x06\x00'
+    FirmwareError = b'\x007\x00'
+    WSPR_MorseIdent = b'\x08\x00'
     Test = 9
 
 # Message delimiters
@@ -313,7 +313,7 @@ class State(Enum):
 data_def = {
     VarId.WSPR_callsign : 15,
     VarId.WSPR_locator : 8,
-    VarId.WSPR_txFreq : 4
+    VarId.WSPR_txFreq : 8
 }
     
 #========================================================================
@@ -345,27 +345,26 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_callsign)
-        # print(self.__ser.readline())
 
     #----------------------------------------------
     # Get current locator
     def get_locator(self):
-        crc = self.calc_crc_32(b'\x03\x00\x07\x00')
-        msg = bytearray(b'\x01\x03\x00\x07\x00')
-        msg = msg + crc + bytearray(b'\x04')
+        # msg = START/8 + READ/16 + WSPR_locator/16 + CRC/32 + STOP/8
+        data = MsgType.Read.value + VarId.WSPR_locator.value
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        self.__do_response(VarId.WSPR_locator)
     
     #----------------------------------------------
     # Get current transmit frequency
     def get_freq(self):
-        crc = self.calc_crc_32(b'\x03\x00\x06\x00')
-        msg = bytearray(b'\x01\x03\x00\x06\x00')
-        msg = msg + crc + bytearray(b'\x04')
+        # msg = START/8 + READ/16 + WSPR_txFreq/16 + CRC/32 + STOP/8
+        data = MsgType.Read.value + VarId.WSPR_txFreq.value
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        resp = self.__ser.readline()
-        f = resp[4:12]
-        print(struct.unpack('<Q',f)[0])
+        self.__do_response(VarId.WSPR_txFreq)
     
     #----------------------------------------------
     # Write methods
@@ -375,31 +374,40 @@ class WSPRLite(object):
     def set_freq(self, freq):
         f = int(freq*1000000)
         f_bytes = struct.pack('<Q', f)
-        crc = self.calc_crc_32(b'\x05\x00\x06\x00' + f_bytes)
-        msg = bytearray(b'\x01\x05\x00\x06\x00' + f_bytes)
-        msg = msg + crc + bytearray(b'\x04')
+        # msg = START/8 + WRITE/16 + WSPR_txFreq/16 + CRC/32 + STOP/8
+        data = MsgType.Write.value + VarId.WSPR_txFreq.value + f_bytes
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        self.__do_response(VarId.WSPR_txFreq)
     
     #----------------------------------------------
     # Start transmitting
     # Note this must be correctly timed to an accurate clock
     def set_tx(self):
-        crc = self.calc_crc_32(b'\x11\x00\x02\x00')
-        msg = bytearray(b'\x01\x11\x00\x02\x00')
-        msg = msg + crc + bytearray(b'\x04')
+        # msg = START/8 + MsgType.DeviceMode_Set/16 + DeviceMode.WSPR_Active/16 + CRC/32 + STOP/8
+        data = MsgType.DeviceMode_Set.value + DeviceMode.WSPR_Active.value
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        self.__do_response(DeviceMode.WSPR_Active)
     
     #----------------------------------------------
     # Stop transmitting
     # Note this should be done immediately after a transmission, not during tramsmission
     def set_idle(self):
-        crc = self.calc_crc_32(b'\x06\x00')
-        msg = bytearray(b'\x01\x06\x00')
-        msg = msg + crc + bytearray(b'\x04')
+        #crc = self.calc_crc_32(b'\x06\x00')
+        #msg = bytearray(b'\x01\x06\x00')
+        #msg = msg + crc + bytearray(b'\x04')
+        #self.__ser.write(msg)
+        #print(self.__ser.readline())
+        
+        # msg = START/8 + MsgType.Reset/16 + CRC/32 + STOP/8
+        data = MsgType.Reset.value
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        self.__do_response(MsgType.Reset)
     
     #----------------------------------------------
     # Util methods
@@ -454,7 +462,7 @@ class WSPRLite(object):
         if b == b'\x81':
             # We have a NAK
             self.__ser.read(1)
-            self.__state = State.NAK
+            self.__state = State.NACK
         elif  b == b'\x84':
             # We have a RESPONSE
             self.__ser.read(1)
@@ -480,17 +488,17 @@ class WSPRLite(object):
     def __do_data(self, cmd):
         # Decode the data according to the command type
         if cmd == VarId.WSPR_callsign:
-            len = data_def.VarId.WSPR_callsign
+            len = data_def[VarId.WSPR_callsign]
             data = self.__ser.read(len)
             print(data.decode("ascii"))
             self.__state = State.CS
         elif cmd == VarId.WSPR_locator:
-            len = data_def.VarId.WSPR_locator
+            len = data_def[VarId.WSPR_locator]
             data = self.__ser.read(len)
             print(data.decode("ascii"))
             self.__state = State.CS            
         elif cmd == VarId.WSPR_txFreq:
-            len = data_def.VarId.WSPR_txFreq
+            len = data_def[VarId.WSPR_txFreq]
             data = self.__ser.read(len)
             print(struct.unpack('<Q',data)[0])
             self.__state = State.CS
