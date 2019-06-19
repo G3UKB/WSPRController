@@ -236,62 +236,86 @@ from time import sleep
 # Enumerations transferred from the C++ Config program
 # The message types
 class MsgType(Enum):
-    Version = 0
-    NACK = 1
-    ACK = 2
-    Read = 3
-    ResponseData = 4
-    Write = 5
-    Reset = 6
-    Bootloader_State = 7
-    Bootloader_Enter = 8
-    Bootloader_EraseAll = 9
-    Bootloader_ErasePage = 10
-    Bootloader_ProgramHexRec = 11
-    Bootloader_ProgramRow = 12
-    Bootloader_ProgramWord = 13
-    Bootloader_CRC = 14
-    Bootloader_ProgramResetAddr = 15
-    DeviceMode_Get = 16
-    DeviceMode_Set = 17
-    DumpEEPROM = 18
-    WSPR_GetTime = 19
-    TestCmd = 20
+    Version = b'\x00\x00'
+    NACK = b'\x01\x00'
+    ACK = b'\x02\x00'
+    Read = b'\x03\x00'
+    ResponseData = b'\x04\x00'
+    Write = b'\x05\x00'
+    Reset = b'\x06\x00'
+    Bootloader_State = b'\x07\x00'
+    Bootloader_Enter = b'\x08\x00'
+    Bootloader_EraseAll = b'\x09\x00'
+    Bootloader_ErasePage = b'\x0a\x00'
+    Bootloader_ProgramHexRec = b'\x0b\x00'
+    Bootloader_ProgramRow = b'\x0c\x00'
+    Bootloader_ProgramWord = b'\x0d\x00'
+    Bootloader_CRC = b'\x0e\x00'
+    Bootloader_ProgramResetAddr = b'\x0f\x00'
+    DeviceMode_Get = b'\x10\x00'
+    DeviceMode_Set = b'\x11\x00'
+    DumpEEPROM = b'\x12\x00'
+    WSPR_GetTime = b'\x13\x00'
+    TestCmd = b'\x14\x00'
 
 # The message qualifier
 class VarId(Enum):
-    MemVersion = 0
-    xoFreq = 1
-    xoFreqFactory = 2
-    ChangeCounter = 3
-    DeviceId = 4
-    DeviceSecret = 5
-    WSPR_txFreq = 6
-    WSPR_locator = 7
-    WSPR_callsign = 8
-    WSPR_paBias = 9
-    WSPR_outputPower = 10
-    WSPR_reportPower = 11
-    WSPR_txPct = 12
-    WSPR_maxTxDuration = 13
-    CwId_Freq = 14
-    CwId_Callsign = 15
-    PaBiasSource = 16
-    END = 18
+    MemVersion = b'\x00\x00'
+    xoFreq = b'\x01\x00'
+    xoFreqFactory = b'\x02\x00'
+    ChangeCounter = b'\x03\x00'
+    DeviceId = b'\x04\x00'
+    DeviceSecret = b'\x05\x00'
+    WSPR_txFreq = b'\x06\x00'
+    WSPR_locator = b'\x07\x00'
+    WSPR_callsign = b'\x08\x00'
+    WSPR_paBias = b'\x09\x00'
+    WSPR_outputPower = b'\x0a\x00'
+    WSPR_reportPower = b'\x0b\x00'
+    WSPR_txPct = b'\x0c\x00'
+    WSPR_maxTxDuration = b'\x0d\x00'
+    CwId_Freq = b'\x0e\x00'
+    CwId_Callsign = b'\x0f\x00'
+    PaBiasSource = b'\x10\x00'
+    END = b'\x11\x00'
 
 # The device mode
-class VarId(Enum):
-    Init = 0
-    WSPR_Pending = 1
-    WSPR_Active = 2
-    WSPR_Invalid = 3
-    Test_ConstantTx = 4
-    FactoryInvalid = 5
-    HardwareFail = 6
-    FirmwareError = 7
-    WSPR_MorseIdent = 8
+class DeviceMode(Enum):
+    Init = b'\x00\x00'
+    WSPR_Pending = b'\x00\x00'
+    WSPR_Active = b'\x01\x00'
+    WSPR_Invalid = b'\x02\x00'
+    Test_ConstantTx = b'\x03\x00'
+    FactoryInvalid = b'\x04\x00'
+    HardwareFail = b'\x05\x00'
+    FirmwareError = b'\x006\x00'
+    WSPR_MorseIdent = b'\x07\x00'
     Test = 9
 
+# Message delimiters
+START = b'\x01'
+END = b'\x04'
+
+# Response states
+class State(Enum):
+    IDLE = auto()
+    START = auto()
+    ESC = auto()
+    ACK = auto()
+    NACK = auto()
+    RESP = auto()
+    DATA = auto()
+    CS = auto()
+    END = auto()
+    DONE = auto()
+
+# Response data length
+data_def = {
+    VarId.WSPR_callsign : 15,
+    VarId.WSPR_locator : 8,
+    VarId.WSPR_txFreq : 4
+}
+    
 #========================================================================
 """
     Main device class for WSPRLite
@@ -315,11 +339,13 @@ class WSPRLite(object):
     #----------------------------------------------
     # Get current callsign
     def get_callsign(self):
-        crc = self.calc_crc_32(b'\x03\x00\x08\x00')
-        msg = bytearray(b'\x01\x03\x00\x08\x00')
-        msg = msg + crc + bytearray(b'\x04')
+        # msg = START/8 + READ/16 + WSPR_callsign/16 + CRC/32 + STOP/8
+        data = MsgType.Read.value + VarId.WSPR_callsign.value
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
         self.__ser.write(msg)
-        print(self.__ser.readline())
+        self.__do_response(VarId.WSPR_callsign)
+        # print(self.__ser.readline())
 
     #----------------------------------------------
     # Get current locator
@@ -382,6 +408,107 @@ class WSPRLite(object):
     def calc_crc_32(self, data):
         return struct.pack('<I', binascii.crc32(data))       
 
+    #----------------------------------------------
+    # Decode response
+    def __do_response(self, cmd):
+        # Responses are variable length and depend on the request type
+        # Process response data
+        self.__state = State.IDLE
+        while True:
+            if self.__state == State.IDLE: self.__do_idle()
+            elif self.__state == State.START: self.__do_start()
+            elif self.__state == State.ESC: self.__do_esc()
+            elif self.__state == State.ACK: self.__do_ack()
+            elif self.__state == State.NACK: self.__do_nack()
+            elif self.__state == State.RESP: self.__do_resp()
+            elif self.__state == State.DATA: self.__do_data(cmd)
+            elif self.__state == State.CS: self.__do_cs()
+            elif self.__state == State.END: self.__do_end()
+            elif self.__state == State.DONE: break
+
+    #----------------------------------------------
+    def __do_idle(self):
+        # Wait for msg start
+        b = self.__ser.read(1)
+        if b == b'\x01':
+            # We have message start
+            self.__state = State.START
+    
+    #----------------------------------------------    
+    def __do_start(self):
+        # Read next byte
+        b = self.__ser.read(1)
+        if b == b'\x10':
+            # Start of escape sequence
+            self.__state = State.ESC
+        elif  b == b'\x02':
+            # We have an ACK
+            # Its a 16 bit number
+            self.__ser.read(1)
+            self.__state = State.ACK
+    
+    #----------------------------------------------         
+    def __do_esc(self):
+        # Read next byte
+        b = self.__ser.read(1)
+        if b == b'\x81':
+            # We have a NAK
+            self.__ser.read(1)
+            self.__state = State.NAK
+        elif  b == b'\x84':
+            # We have a RESPONSE
+            self.__ser.read(1)
+            self.__state = State.RESP
+    
+    #----------------------------------------------          
+    def __do_ack(self):
+        print('Success')
+        self.__state = State.CS
+    
+    #----------------------------------------------      
+    def __do_nack(self):
+        print('Command failed!')
+        self.__state = State.CS
+    
+    #----------------------------------------------      
+    def __do_resp(self):
+        # We now expect some response data
+        # The length of this depends on the command
+        self.__state = State.DATA
+    
+    #----------------------------------------------   
+    def __do_data(self, cmd):
+        # Decode the data according to the command type
+        if cmd == VarId.WSPR_callsign:
+            len = data_def.VarId.WSPR_callsign
+            data = self.__ser.read(len)
+            print(data.decode("ascii"))
+            self.__state = State.CS
+        elif cmd == VarId.WSPR_locator:
+            len = data_def.VarId.WSPR_locator
+            data = self.__ser.read(len)
+            print(data.decode("ascii"))
+            self.__state = State.CS            
+        elif cmd == VarId.WSPR_txFreq:
+            len = data_def.VarId.WSPR_txFreq
+            data = self.__ser.read(len)
+            print(struct.unpack('<Q',data)[0])
+            self.__state = State.CS
+            
+    #----------------------------------------------     
+    def __do_cs(self):
+        # Should check this
+        self.__ser.read(4)
+        self.__state = State.END
+    
+    #----------------------------------------------      
+    def __do_end(self):
+        # Wait for msg end
+        b = self.__ser.read(1)
+        if b == b'\x04':
+            # We have message end
+            self.__state = State.DONE
+        
 #========================================================================
 # Module Test       
 if __name__ == '__main__':
