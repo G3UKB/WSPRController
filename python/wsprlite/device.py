@@ -225,12 +225,16 @@
 
 """
 
+# Python imports
 import os,sys
 import serial
 import binascii
 import struct
 from enum import Enum, auto
 from time import sleep
+
+# Application imports
+import timer
 
 #========================================================================
 # Enumerations transferred from the C++ Config program
@@ -333,6 +337,9 @@ class WSPRLite(object):
         self.__ser.stopbits = 2
         self.__ser.rtscts = True
         self.__ser.timeout = 2.0
+        
+        # Create timer instance
+        self.__timer = timer.TimerThrd(self.__start_cb, self.__stop_cb)
     
     #----------------------------------------------
     # Read methods
@@ -392,10 +399,8 @@ class WSPRLite(object):
         # msg = START/8 + MsgType.DeviceMode_Set/16 + DeviceMode.WSPR_Active/16 + CRC/32 + STOP/8
         data = MsgType.DeviceMode_Set.value + DeviceMode.WSPR_Active.value
         crc = self.calc_crc_32(data)
-        msg = START + data + crc + END
-        self.__ser.write(msg)
-        self.__do_response(DeviceMode.WSPR_Active)
-        return self.__reply
+        self.__set_tx_msg = START + data + crc + END
+        self.__timer.wait_start()
     
     #----------------------------------------------
     # Stop transmitting
@@ -404,10 +409,8 @@ class WSPRLite(object):
         # msg = START/8 + MsgType.Reset/16 + CRC/32 + STOP/8
         data = MsgType.Reset.value
         crc = self.calc_crc_32(data)
-        msg = START + data + crc + END
-        self.__ser.write(msg)
-        self.__do_response(MsgType.Reset)
-        return self.__reply
+        self.__idle_msg = START + data + crc + END
+        self.__timer.wait_stop()
     
     #----------------------------------------------
     # Util methods
@@ -517,7 +520,22 @@ class WSPRLite(object):
         if b == b'\x04':
             # We have message end
             self.__state = State.DONE
-        
+
+    #========================================================================
+    # Callbacks
+    def __start_cb(self):
+        # Complete the TX message at correct start time
+        self.__ser.write(self.__set_tx_msg)
+        self.__do_response(DeviceMode.WSPR_Active)
+        return self.__reply
+    
+    #----------------------------------------------   
+    def __stop_cb(self):
+        # Complete the reset message during transmission window
+        self.__ser.write(self.__idle_msg)
+        self.__do_response(MsgType.Reset)
+        return self.__reply    
+
 #========================================================================
 # Module Test       
 if __name__ == '__main__':
