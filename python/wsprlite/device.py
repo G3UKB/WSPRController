@@ -345,6 +345,7 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_callsign)
+        return self.__reply
 
     #----------------------------------------------
     # Get current locator
@@ -355,6 +356,7 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_locator)
+        return self.__reply
     
     #----------------------------------------------
     # Get current transmit frequency
@@ -365,6 +367,7 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_txFreq)
+        return self.__reply
     
     #----------------------------------------------
     # Write methods
@@ -380,6 +383,7 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_txFreq)
+        return self.__reply
     
     #----------------------------------------------
     # Start transmitting
@@ -391,23 +395,19 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(DeviceMode.WSPR_Active)
+        return self.__reply
     
     #----------------------------------------------
     # Stop transmitting
     # Note this should be done immediately after a transmission, not during tramsmission
     def set_idle(self):
-        #crc = self.calc_crc_32(b'\x06\x00')
-        #msg = bytearray(b'\x01\x06\x00')
-        #msg = msg + crc + bytearray(b'\x04')
-        #self.__ser.write(msg)
-        #print(self.__ser.readline())
-        
         # msg = START/8 + MsgType.Reset/16 + CRC/32 + STOP/8
         data = MsgType.Reset.value
         crc = self.calc_crc_32(data)
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(MsgType.Reset)
+        return self.__reply
     
     #----------------------------------------------
     # Util methods
@@ -422,6 +422,7 @@ class WSPRLite(object):
         # Responses are variable length and depend on the request type
         # Process response data
         self.__state = State.IDLE
+        self.__reply = (False, '')
         while True:
             if self.__state == State.IDLE: self.__do_idle()
             elif self.__state == State.START: self.__do_start()
@@ -470,12 +471,12 @@ class WSPRLite(object):
     
     #----------------------------------------------          
     def __do_ack(self):
-        print('Success')
+        self.__reply = (True, '')
         self.__state = State.CS
     
     #----------------------------------------------      
     def __do_nack(self):
-        print('Command failed!')
+        self.__reply = (False, 'Command returned NACK!')
         self.__state = State.CS
     
     #----------------------------------------------      
@@ -490,17 +491,17 @@ class WSPRLite(object):
         if cmd == VarId.WSPR_callsign:
             len = data_def[VarId.WSPR_callsign]
             data = self.__ser.read(len)
-            print(data.decode("ascii"))
+            self.__reply = (True, data.decode("ascii").rstrip('\0'))
             self.__state = State.CS
         elif cmd == VarId.WSPR_locator:
             len = data_def[VarId.WSPR_locator]
             data = self.__ser.read(len)
-            print(data.decode("ascii"))
+            self.__reply = (True, data.decode("ascii").rstrip('\0'))
             self.__state = State.CS            
         elif cmd == VarId.WSPR_txFreq:
             len = data_def[VarId.WSPR_txFreq]
             data = self.__ser.read(len)
-            print(struct.unpack('<Q',data)[0])
+            self.__reply = (True, struct.unpack('<Q',data)[0])
             self.__state = State.CS
             
     #----------------------------------------------     
@@ -528,11 +529,11 @@ if __name__ == '__main__':
         device = '/dev/ttyUSB0'
     
     lite = WSPRLite(device)
-    lite.get_callsign()
-    lite.get_locator()
-    lite.get_freq()
-    lite.set_freq(7.097066)
-    lite.get_freq()
-    lite.set_tx()
+    print(lite.get_callsign())
+    print(lite.get_locator())
+    print(lite.get_freq())
+    print(lite.set_freq(14.097066))
+    print(lite.get_freq())
+    print(lite.set_tx())
     sleep(3)
-    lite.set_idle()
+    print(lite.set_idle())
