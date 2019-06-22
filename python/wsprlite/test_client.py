@@ -24,12 +24,37 @@
 # Exercise the application over the UDP interface.
 
 import socket
-import defs
+from defs import *
+import pickle
+from time import sleep
 
 address = ('localhost', 10001)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 pickledData = pickle.dumps((GET_CALLSIGN,))
 sock.sendto(pickledData, address)
-data, sender = self.__sock.recvfrom(100)
-print(data)
+data, sender = sock.recvfrom(100)
+print(pickle.loads(data))
+
+pickledData = pickle.dumps((GET_LOCATOR,))
+sock.sendto(pickledData, address)
+data, sender = sock.recvfrom(100)
+print(pickle.loads(data))
+
+pickledData = pickle.dumps((GET_FREQ,))
+sock.sendto(pickledData, address)
+data, sender = sock.recvfrom(100)
+print(pickle.loads(data))
+
+pickledData = pickle.dumps((SET_TX,))
+sock.sendto(pickledData, address)
+data, sender = sock.recvfrom(100)
+print(pickle.loads(data))
+
+#sleep(3)
+
+#pickledData = pickle.dumps((SET_IDLE,))
+#sock.sendto(pickledData, address)
+#data, sender = sock.recvfrom(100)
+#print(pickle.loads(data))

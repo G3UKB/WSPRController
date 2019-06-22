@@ -234,6 +234,7 @@ from enum import Enum, auto
 from time import sleep
 
 # Application imports
+from defs import *
 import timer
 
 #========================================================================
@@ -330,7 +331,11 @@ class WSPRLite(object):
     # Constructor
     def __init__(self, device):
         # Create connection and set parameters according to device spec
-        self.__ser = serial.Serial(device)
+        try:
+            self.__ser = serial.Serial(device)
+        except serial.SerialException:
+            print ("Could not open the specified serial port! [%s]" % (device))
+            sys.exit()
         self.__ser.baudrate = 1000000
         self.__ser.bytesize = 8
         self.__ser.parity = 'N'
