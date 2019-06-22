@@ -21,11 +21,13 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
 import os, sys
 import threading
 import socket
 import pickle
 
+# Application imports
 from defs import *
 
 """
@@ -34,9 +36,6 @@ Interface to the WSPRLite client application:
 Commands are UDP:
     
 """
-
-RQST_IP = '192.168.1.112'
-RQST_PORT = 10001
 
 #========================================================================
 # Net interface

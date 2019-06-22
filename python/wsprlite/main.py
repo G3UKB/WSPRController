@@ -21,10 +21,13 @@
 #     bob@bobcowdery.plus.com
 #
 
+# Python imports
 import os, sys
 from time import sleep
 import pickle
 
+# Application imports
+import device
 import netif
 
 #========================================================================
@@ -35,10 +38,18 @@ class WSPRLiteMain:
     # Constructor
     def __init__(self):
         
+        # Create the device instance
+        if sys.platform == 'win32' or sys.platform == 'win64':
+            device = 'COM5'
+        else:
+            # Assume Linux
+            device = '/dev/ttyUSB0'   
+        self.__lite = device.WSPRLite(device)
+        
         # Run the net interface as this is the active thread.
         self.__netif = netif.NetIF(self.__netCallback)
-        self.__netif.start()      
-    
+        self.__netif.start()
+                
     #----------------------------------------------
     # Idle loop      
     def mainLoop(self):
@@ -65,11 +76,23 @@ class WSPRLiteMain:
             request = pickle.loads(data)
             # request is an array of type followed by one or more parameters
             type = request[0]
-            if type == 
-                    self.__netif.response(self.__decoder.fres())
-            response ??
+            if type == GET_CALLSIGN:
+                self.__netif.response(self.__lite.get_callsign())
+            elif type == GET_LOCATOR:
+                self.__netif.response(self.__lite.get_locator())
+            elif type == GET_FREQ:
+                self.__netif.response(self.__lite.get_freq())
+            elif type == SET_FREQ:
+                if len(request) != 2:
+                    self.__netif.response("Error - wrong number of parameters!")
+                else:
+                    self.__netif.response(self.__lite.set_freq(request[1])) 
+            elif type == SET_TX:
+                self.__netif.response(self.__lite.set_tx())
+            elif type == SET_IDLE:
+                self.__netif.response(self.__lite.set_idle())
         except pickle.UnpicklingError:
-            print('Failed to unpickle request data!')
+            self.__netif.response('Failed to unpickle request data!')
 
 #========================================================================
 # Entry point            

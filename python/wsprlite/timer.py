@@ -31,13 +31,14 @@
     start/stop time has been reached.
 """
 
+# Python imports
 import threading
 import datetime
 import queue
 from time import sleep
 
-WAIT_START = 0
-WAIT_STOP = 1
+# Application imports
+from defs import *
 
 #========================================================================
 """
