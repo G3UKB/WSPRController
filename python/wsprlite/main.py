@@ -40,11 +40,11 @@ class WSPRLiteMain:
         
         # Create the device instance
         if sys.platform == 'win32' or sys.platform == 'win64':
-            device = 'COM5'
+            path = 'COM5'
         else:
             # Assume Linux
-            device = '/dev/ttyUSB0'   
-        self.__lite = device.WSPRLite(device)
+            path = '/dev/ttyUSB0'   
+        self.__lite = device.WSPRLite(path)
         
         # Run the net interface as this is the active thread.
         self.__netif = netif.NetIF(self.__netCallback)
