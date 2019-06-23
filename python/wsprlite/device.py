@@ -421,7 +421,10 @@ class WSPRLite(object):
         msg = START + data + crc + END
         self.__ser.write(msg)
         self.__do_response(VarId.WSPR_txFreq)
-        return self.__reply
+        if self.__reply[0] == True:
+            return self.get_freq()
+        else:
+            return self.__reply
 
     #----------------------------------------------
     # Start transmitting
