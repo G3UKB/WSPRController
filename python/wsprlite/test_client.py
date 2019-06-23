@@ -49,12 +49,28 @@ print(pickle.loads(data))
 
 pickledData = pickle.dumps((SET_TX,))
 sock.sendto(pickledData, address)
-data, sender = sock.recvfrom(100)
-print(pickle.loads(data))
+resp = sock.recvfrom(100)
+if resp == None:
+    while True:
+        resp = sock.recvfrom(100)
+        if resp != None:
+            break
+        else:
+            print("Waiting response to SET_TX...")
+            sleep(10)    
+print(pickle.loads(resp[0]))
 
-#sleep(3)
+sleep(3)
 
-#pickledData = pickle.dumps((SET_IDLE,))
-#sock.sendto(pickledData, address)
-#data, sender = sock.recvfrom(100)
-#print(pickle.loads(data))
+pickledData = pickle.dumps((SET_IDLE,))
+sock.sendto(pickledData, address)
+resp = sock.recvfrom(100)
+if resp == None:
+    while True:
+        resp = sock.recvfrom(100)
+        if resp != None:
+            break
+        else:
+            print("Waiting response to SET_IDLE...")
+            sleep(10)    
+print(pickle.loads(resp[0]))

@@ -45,7 +45,7 @@ class WSPRLiteMain:
         else:
             # Assume Linux
             path = '/dev/ttyUSB0'   
-        self.__lite = device.WSPRLite(path)
+        self.__lite = device.WSPRLite(path, self.__startCallback, self.__stopCallback)
         
         # Run the net interface as this is the active thread.
         self.__netif = netif.NetIF(self.__netCallback)
@@ -65,6 +65,8 @@ class WSPRLiteMain:
             # Terminate the netif thread and wait for it to close
             self.__netif.terminate()
             self.__netif.join()
+            # and the device
+            self.__lite.terminate()
             
             print('Interrupt - exiting...')
     
@@ -89,12 +91,22 @@ class WSPRLiteMain:
                 else:
                     self.__netif.response(self.__lite.set_freq(request[1])) 
             elif type == SET_TX:
-                self.__netif.response(self.__lite.set_tx())
+                self.__lite.set_tx()
             elif type == SET_IDLE:
-                self.__netif.response(self.__lite.set_idle())
+                self.__lite.set_idle()
         except pickle.UnpicklingError:
             self.__netif.response('Failed to unpickle request data!')
 
+    #----------------------------------------------
+    # Callback when TX activated          
+    def __startCallback(self, data):
+        self.__netif.response(data)
+    
+    #----------------------------------------------
+    # Callback when TX stopped          
+    def __stopCallback(self, data):
+        self.__netif.response(data)
+        
 #========================================================================
 # Entry point            
 if __name__ == '__main__':

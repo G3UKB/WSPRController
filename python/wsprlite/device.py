@@ -329,7 +329,11 @@ class WSPRLite(object):
     
     #----------------------------------------------
     # Constructor
-    def __init__(self, device):
+    def __init__(self, device, m_start_cb, m_stop_cb):
+        
+        self.__m_start_cb = m_start_cb
+        self.__m_stop_cb = m_stop_cb
+        
         # Create connection and set parameters according to device spec
         try:
             self.__ser = serial.Serial(device)
@@ -345,7 +349,14 @@ class WSPRLite(object):
         
         # Create timer instance
         self.__timer = timer.TimerThrd(self.__start_cb, self.__stop_cb)
+        self.__timer.start()
     
+    #----------------------------------------------
+    # Terminate
+    def terminate(self):
+        self.__timer.terminate()
+        self.__timer.join()
+        
     #----------------------------------------------
     # Read methods
     #----------------------------------------------
@@ -532,14 +543,14 @@ class WSPRLite(object):
         # Complete the TX message at correct start time
         self.__ser.write(self.__set_tx_msg)
         self.__do_response(DeviceMode.WSPR_Active)
-        return self.__reply
+        self.__m_start_cb(self.__reply)
     
     #----------------------------------------------   
     def __stop_cb(self):
         # Complete the reset message during transmission window
         self.__ser.write(self.__idle_msg)
         self.__do_response(MsgType.Reset)
-        return self.__reply    
+        self.__m_stop_cb(self.__reply)    
 
 #========================================================================
 # Module Test       
