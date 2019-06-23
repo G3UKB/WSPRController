@@ -236,6 +236,7 @@ from time import sleep
 # Application imports
 from defs import *
 import timer
+import freq_table
 
 #========================================================================
 # Enumerations transferred from the C++ Config program
@@ -408,6 +409,20 @@ class WSPRLite(object):
         self.__do_response(VarId.WSPR_txFreq)
         return self.__reply
     
+    # Set a transmit frequency given a band
+    # Band is an integer wavelength.
+    def set_band(self, band):
+        freq = freq_table.get_tx_freq(band)
+        f = int(freq*1000000)
+        f_bytes = struct.pack('<Q', f)
+        # msg = START/8 + WRITE/16 + WSPR_txFreq/16 + CRC/32 + STOP/8
+        data = MsgType.Write.value + VarId.WSPR_txFreq.value + f_bytes
+        crc = self.calc_crc_32(data)
+        msg = START + data + crc + END
+        self.__ser.write(msg)
+        self.__do_response(VarId.WSPR_txFreq)
+        return self.__reply
+
     #----------------------------------------------
     # Start transmitting
     # Note this must be correctly timed to an accurate clock

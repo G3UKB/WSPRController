@@ -89,7 +89,12 @@ class WSPRLiteMain:
                 if len(request) != 2:
                     self.__netif.response("Error - wrong number of parameters!")
                 else:
-                    self.__netif.response(self.__lite.set_freq(request[1])) 
+                    self.__netif.response(self.__lite.set_freq(request[1]))
+            elif type == SET_BAND:
+                if len(request) != 2:
+                    self.__netif.response("Error - wrong number of parameters!")
+                else:
+                    self.__netif.response(self.__lite.set_band(request[1])) 
             elif type == SET_TX:
                 self.__lite.set_tx()
             elif type == SET_IDLE:
